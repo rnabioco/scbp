@@ -1,0 +1,56 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# scbp
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+scbp is boilerplate code for single cell analyses. Mostly thin wrappers on seurat functions. 
+
+## Installation
+
+``` r
+remotes::install_github(rnabioco/scbp)
+```
+
+
+## Example
+
+```{r example}
+library(scbp)
+library(Seurat)
+
+so <- Seurat::pbmc_small
+
+plot_tsne(so, "groups")
+plot_tsne(so, "CST3")
+
+plot_features_split(so, 
+                    "CST3",
+                    "groups", 
+                    embedding = "tsne")
+
+plot_features_split(so, 
+                    "RNA_snn_res.1",
+                    "groups", 
+                    embedding = "tsne", 
+                    minimal_theme = TRUE,
+                    )
+
+get_metadata(so)
+```
+
+
