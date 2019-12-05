@@ -23,7 +23,7 @@ scbp is boilerplate code for single cell analyses. Mostly thin wrappers on seura
 ## Installation
 
 ``` r
-remotes::install_github(rnabioco/scbp)
+remotes::install_github("rnabioco/scbp")
 ```
 
 
@@ -37,7 +37,10 @@ so <- Seurat::pbmc_small
 
 plot_tsne(so, "groups")
 plot_tsne(so, "CST3")
+```
 
+
+```{r }
 plot_features_split(so, 
                     "CST3",
                     "groups", 
@@ -49,8 +52,12 @@ plot_features_split(so,
                     embedding = "tsne", 
                     minimal_theme = TRUE,
                     )
+```
 
+
+```{r}
 get_metadata(so)
 ```
+
 
 

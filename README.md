@@ -13,7 +13,7 @@ on seurat functions.
 ## Installation
 
 ``` r
-remotes::install_github(rnabioco/scbp)
+remotes::install_github("rnabioco/scbp")
 ```
 
 ## Example
@@ -36,14 +36,13 @@ plot_tsne(so, "CST3")
 <img src="man/figures/README-example-2.png" width="100%" />
 
 ``` r
-
 plot_features_split(so, 
                     "CST3",
                     "groups", 
                     embedding = "tsne")
 ```
 
-<img src="man/figures/README-example-3.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
 
 ``` r
 
@@ -55,10 +54,9 @@ plot_features_split(so,
                     )
 ```
 
-<img src="man/figures/README-example-4.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-2-2.png" width="100%" />
 
 ``` r
-
 get_metadata(so)
 #> # A tibble: 80 x 12
 #>    cell  orig.ident nCount_RNA nFeature_RNA RNA_snn_res.0.8 letter.idents groups

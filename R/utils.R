@@ -621,7 +621,6 @@ set_shared_orthologs <- function(so1, so2, orthologs){
 #' @param column_list columns to keep in browser
 #' @param primary_color_palette palette for catagorical variables
 #' @param secondary_color_palette secondary palette for catagorical variables
-#' @param secondary_color_palette secondary palette for catagorical variables
 #' @param secondary_cols columns to color by secondary_color_palette
 #' @param outdir output directory for cellbrowser
 #' @param project project string
