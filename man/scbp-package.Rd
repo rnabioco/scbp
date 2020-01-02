@@ -4,9 +4,13 @@
 \name{scbp-package}
 \alias{scbp}
 \alias{scbp-package}
-\title{scbp: What the Package Does (Title Case)}
+\title{scbp: Boilerplate functions for single cell rna-seq analysis}
 \description{
-More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Lightweight wrappers to customize various plotting routines and
+    analysis methods.
+}
+\author{
+\strong{Maintainer}: Kent Riemondy \email{kent.riemondy@ucdenver.edu} (\href{https://orcid.org/0000-0003-0750-1273}{ORCID})
+
 }
 \keyword{internal}
