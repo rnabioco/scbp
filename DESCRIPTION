@@ -29,5 +29,7 @@ Imports:
     tibble,
     dplyr,
     purrr,
-    fgsea
+    fgsea,
+    DropletUtils,
+    BUSpaRse
 RoxygenNote: 7.0.2

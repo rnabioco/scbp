@@ -479,6 +479,8 @@ get_metadata <- function(obj, embedding = NULL) {
 #' @param add_title want a title?
 #' @param ... additional args passed to plot_feature
 #'
+#' @importFrom stats as.formula median na.omit
+#' @importFrom utils write.table
 #' @export
 plot_features_split <- function(sobj, feature, group = "orig.ident",
                                 embedding = "umap", cols = NULL,
@@ -1122,5 +1124,73 @@ ExportToCellbrowserFast <- function(
 }
 
 
+#' Preprocessing for Bustools output
+#'
+#' @param paths paths to directories with mtx files. If a
+#' named vector is supplied then the cellbarcode will be
+#' prefixed with "name_".
+#' @param fdr fdr cutoff for cell calling
+#' @param ... additional arguments passed onto emptyDrops
+#'
+#' @return A list of named lists with slots:
+#'   mtx a sparseMatrix with only cell associated barcodes
+#'   empty_drops a data.frame with information from emptyDrops
+#'   barcode_ranks a data.frame with information from barcodeRanks
+#' @importFrom BUSpaRse read_count_output
+#' @importFrom DropletUtils emptyDrops barcodeRanks
+#' @export
+preprocess_bus <- function(paths,
+                           fdr = 0.01,
+                           ...){
+
+  res <- list()
+
+  for (i in seq_along(paths)){
+
+    mtx_path <- paths[i]
+    message("loading matrix: ", mtx_path)
+
+    mtx_prefix <- stringr::str_subset(dir(mtx_path), ".mtx$") %>%
+      stringr::str_remove(".mtx")
+
+    mat <- BUSpaRse::read_count_output(mtx_path,
+                                       name = mtx_prefix,
+                                       tcc = FALSE)
+
+    barcode_ranks <- DropletUtils::barcodeRanks(mat)
+
+    empty_drops <- DropletUtils::emptyDrops(mat, ...)
+
+    is_cell <- empty_drops$FDR <= fdr
+    cell_bcs <- rownames(empty_drops)[which(is_cell)]
+
+    cell_mat <- mat[, cell_bcs, drop = FALSE]
+
+    prefix <- names(paths[i])
+
+    if(!is.null(prefix)){
+      colnames(cell_mat) <- stringr::str_c(
+        prefix,
+        "_",
+        colnames(cell_mat))
+
+      rownames(empty_drops) <- stringr::str_c(
+        prefix,
+        "_",
+        rownames(empty_drops))
+
+      rownames(barcode_ranks) <- stringr::str_c(
+        prefix,
+        "_",
+        rownames(barcode_ranks))
+
+    }
+    res[[i]] <- list(mtx = cell_mat,
+                     barcode_ranks = barcode_ranks,
+                     empty_drops = empty_drops)
+  }
+
+  res
+}
 
 
