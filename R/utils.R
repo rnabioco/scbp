@@ -378,39 +378,122 @@ set_xlsx_class <- function(df, col, xlsx_class){
 }
 
 #' @export
+seurat_marker_description <- function(description = ""){
+  tibble(
+  Columns = c(
+    description,
+    "",
+    "Columns",
+    "pval",
+    "avg_logFC",
+    "pct.1",
+    "pct.2",
+    "p_val_adj",
+    "cluster",
+    "gene"
+  ), Description = c(
+    "",
+    "",
+    "",
+    "p-value from wilcox test of indicated cluster compared to other clusters",
+    "average fold change expressed in natural log",
+    "percent of cells expressing gene (UMI > 0) in cluster",
+    "percent of cell expressing gene (UMI > 0) in all other clusters",
+    "Bonferroni corrected p-value",
+    "cluster name",
+    "gene name"
+  ))
+}
+
+#' @export
+presto_marker_description <- function(description = ""){
+  tibble(
+  Columns = c(
+    description,
+    "",
+    "Columns",
+    "feature",
+    "group",
+    "avgExpr",
+    "logFC",
+    "statistic",
+    "auc",
+    "pval",
+    "padj",
+    "pct_in",
+    "pct_out"
+  ), Description = c(
+    "",
+    "",
+    "",
+    "gene/feature name",
+    "group/cluster id",
+    "averge normalized expression",
+    "average fold change expressed in natural log",
+    "test statistic from wilcox test",
+    "AUC stat using this single gene as a classifier for the cluster",
+    "unadjusted p-value from wilcox test of indicated cluster compared to other clusters",
+    "Benjamini-Hochberge corrected p-value from wilcox test of indicated cluster compared to other clusters",
+    "percent of cells expressing gene (UMI > 0) in cluster",
+    "percent of cell expressing gene (UMI > 0) in all other clusters"
+  ))
+}
+
+marker_type <- function(df){
+  if(is.character(df)){
+    df <- suppressMessages(read_tsv(df))
+  }
+  seurat_cols <- c("cluster",
+                   "gene",
+                   "p_val",
+                   "avg_logFC",
+                   "pct.1",
+                   "pct.2",
+                   "p_val_adj")
+
+  presto_cols <- c("feature",
+                   "group",
+                   "avgExpr",
+                   "logFC",
+                   "statistic",
+                   "auc",
+                   "pval",
+                   "padj",
+                   "pct_in",
+                   "pct_out")
+  if(all(colnames(df) %in% seurat_cols)){
+    marker_type <- "Seurat"
+  } else if (all(colnames(df) %in% presto_cols)) {
+    marker_type <- "presto"
+  } else {
+    stop("unknown marker file")
+  }
+  marker_type
+}
+
+#' Write marker table to excel for easier perusal by collaborators
+#' @param mrkr_list list of marker data.frames from Seurat or presto
+#' @param path path to output xlsx
+#' @param description_string String to add to first excel sheet to describe data
+#' . Text is included with scbp::presto_marker_description or scbp::seurat_marker_description
+#' @export
 write_markers_xlsx <- function(mrkr_list,
                                path,
                                description_string = "Genes differentially expressed between each cluster and all other cells"){
 
-  readme_sheet <- tibble(
-    Columns = c(
-      description_string,
-      "",
-      "Columns",
-      "pval",
-      "avg_logFC",
-      "pct.1",
-      "pct.2",
-      "p_val_adj",
-      "cluster",
-      "gene"
-    ), Description = c(
-      "",
-      "",
-      "",
-      "p-value from wilcox test of indicated cluster compared to other clusters",
-      "average fold change expressed in natural log",
-      "percent of cells expressing gene (UMI > 0) in cluster",
-      "percent of cell expressing gene (UMI > 0) in all other clusters",
-      "Bonferroni corrected p-value",
-      "cluster name",
-      "gene name"
-    ))
+  if(marker_type(mrkr_list[[1]]) == "Seurat"){
+    readme_sheet <- seurat_marker_description(description_string)
+    gene_col <- "gene"
+  } else {
+    readme_sheet <- presto_marker_description(description_string)
+    gene_col <- "feature"
+  }
+
   readme_sheet <- list(README = readme_sheet)
   names(readme_sheet) <- "README"
 
   xcel_out <- map(mrkr_list,
-                  ~set_xlsx_class(.x, "gene", "Text"))
+                  ~set_xlsx_class(.x, gene_col, "Text"))
 
   xcel_out <- c(readme_sheet,  xcel_out)
 
@@ -744,8 +827,19 @@ make_cellbrowser <- function(so,
   # otherwise ascending order
   # see https://github.com/maximilianh/cellBrowser/blob/c643946d160c9729833a47d1bc44cd49fface6f6/src/cbPyLib/cellbrowser/cellbrowser.py#L2260
   if(!is.null(marker_file)){
-    mkrs <- read_tsv(marker_file) %>%
-      select(cluster, gene, fdr = p_val_adj, avg_logFC, everything(), -p_val)
+    if(marker_type(marker_file) == "Seurat"){
+      mkrs <- read_tsv(marker_file) %>%
+        select(cluster, gene, fdr = p_val_adj, avg_logFC, everything(), -p_val)
+    } else {
+      mkrs <- read_tsv(marker_file) %>%
+        select(cluster = group,
+               gene = feature,
+               fdr = padj,
+               logFC,
+               everything(),
+               -pval,
+               -statistic)
+    }
     print(cbmarker_file)
     write_tsv(mkrs, cbmarker_file)
 
