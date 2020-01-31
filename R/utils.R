@@ -56,6 +56,8 @@ discrete_palette_default <- c(tableu_classic_palatte,
 #' If false, then the minumum value for the plotted feature will be used.
 #' @param minimal_theme plot bare minimum
 #' @param dims which dims to plot from embedding, defaults to first and second, i.e. c(1,2).
+#' @param sorted should the plotting be determined by sorting in ascending order? Default
+#' is sorted by_feature (one of "by_feature", "none", "random")
 #' @export
 plot_feature <- function(seurat_obj,
                          feature = NULL,
@@ -74,7 +76,8 @@ plot_feature <- function(seurat_obj,
                          embedding = "tsne",
                          show_negative = FALSE,
                          minimal_theme = FALSE,
-                         dims = c(1, 2)){
+                         dims = c(1, 2),
+                         sorted = c("by_feature", "none", "random")){
 
   mdata <- seurat_obj@meta.data %>% tibble::rownames_to_column("cell")
 
@@ -122,7 +125,14 @@ plot_feature <- function(seurat_obj,
   color_aes_str <- feature
 
   color_aes_str_q <- quo(color_aes_str)
-  embed_dat <- embed_dat %>% arrange_at(.vars = color_aes_str)
+
+  if(sorted == "by_feature"){
+    embed_dat <- embed_dat %>% arrange_at(.vars = color_aes_str)
+  } else if (sorted == "random"){
+    set.seed(42)
+    idx <- sample(1:nrow(embed_dat), nrow(embed_dat), replace = FALSE)
+    embed_dat <- embed_dat[idx, ]
+  }
 
   p <- ggplot(embed_dat,
               aes_string(xcol, ycol)) +

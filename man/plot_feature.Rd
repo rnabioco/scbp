@@ -22,7 +22,8 @@ plot_feature(
   embedding = "tsne",
   show_negative = FALSE,
   minimal_theme = FALSE,
-  dims = c(1, 2)
+  dims = c(1, 2),
+  sorted = c("by_feature", "none", "random")
 )
 }
 \arguments{
@@ -65,6 +66,9 @@ If false, then the minumum value for the plotted feature will be used.}
 \item{minimal_theme}{plot bare minimum}
 
 \item{dims}{which dims to plot from embedding, defaults to first and second, i.e. c(1,2).}
+
+\item{sorted}{should the plotting be determined by sorting in ascending order? Default
+is sorted by_feature (one of "by_feature", "none", "random")}
 }
 \description{
 Cells can be colored by gene or feature in meta.data dataframe
