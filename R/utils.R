@@ -531,34 +531,39 @@ write_avg_expr <- function(sobj, col, path, assay = "RNA") {
 #' Extract out reduced dimensions and cell metadata to tibble
 #'
 #' @param obj Seurat Object
-#' @param embedding dr slot to extract (defaults to all embeddings (2D))
+#' @param ... additional features to extract into output via FetchData
+#' @param embedding dr slot to extract (defaults to all embeddings (2D)),
+#' if NULL, will not extract embeddings
 #' @export
-get_metadata <- function(obj, embedding = NULL) {
+get_metadata <- function(obj, ..., embedding = names(obj@reductions)) {
 
-  mdata <- as_tibble(obj@meta.data, rownames = "cell")
+  res <- as_tibble(obj@meta.data, rownames = "cell")
 
   if (!is.null(embedding)) {
-    if (!embedding %in% names(obj@reductions)) {
-      stop(paste0(embedding, " not found in seurat object"), call. = FALSE)
+    if (any(!embedding %in% names(obj@reductions))) {
+      stop(paste0(embedding, " not found in seurat object\n"), call. = FALSE)
     }
-
-    embed_dat <- obj@reductions[[embedding]]@cell.embeddings %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column("cell")
-
-  } else {
     embed_dat <- map(names(obj@reductions),
-                         ~obj@reductions[[.x]]@cell.embeddings[, 1:2]) %>%
+                     ~obj@reductions[[.x]]@cell.embeddings[, 1:2]) %>%
       do.call(cbind, .) %>%
       as.data.frame() %>%
       tibble::rownames_to_column("cell")
 
-  }
+    res <- left_join(res,
+                     embed_dat,
+                     by = "cell")
 
-  embed_dat <- left_join(mdata,
-                         embed_dat,
-                         by = "cell")
-  embed_dat
+  }
+  vargs <-  list(...)
+
+  if(length(vargs) > 0){
+    res <- Seurat::FetchData(obj, vars = ...) %>%
+      rownames_to_column("cell") %>%
+      left_join(res,
+                .,
+                by = "cell")
+  }
+  res
 }
 
 
