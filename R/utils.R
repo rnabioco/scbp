@@ -126,9 +126,9 @@ plot_feature <- function(seurat_obj,
 
   color_aes_str_q <- quo(color_aes_str)
 
-  if(sorted == "by_feature"){
+  if(sorted[1] == "by_feature"){
     embed_dat <- embed_dat %>% arrange_at(.vars = color_aes_str)
-  } else if (sorted == "random"){
+  } else if (sorted[1] == "random"){
     set.seed(42)
     idx <- sample(1:nrow(embed_dat), nrow(embed_dat), replace = FALSE)
     embed_dat <- embed_dat[idx, ]
@@ -246,6 +246,7 @@ plot_feature <- function(seurat_obj,
   p
 }
 
+
 #' @export
 plot_umap <- function(...){
   plot_feature(..., embedding = "umap")
@@ -260,6 +261,12 @@ plot_tsne <- function(...){
 plot_pca <- function(...){
   plot_feature(..., embedding = "pca")
 }
+
+#' @export
+plot_harmony <- function(...){
+  plot_feature(..., embedding = "harmony_umap")
+}
+
 
 #' @export
 plot_violin <- function(df, .x, .y,
