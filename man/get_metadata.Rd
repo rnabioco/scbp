@@ -4,12 +4,15 @@
 \alias{get_metadata}
 \title{Extract out reduced dimensions and cell metadata to tibble}
 \usage{
-get_metadata(obj, embedding = NULL)
+get_metadata(obj, ..., embedding = names(obj@reductions))
 }
 \arguments{
 \item{obj}{Seurat Object}
 
-\item{embedding}{dr slot to extract (defaults to all embeddings (2D))}
+\item{...}{additional features to extract into output via FetchData}
+
+\item{embedding}{dr slot to extract (defaults to all embeddings (2D)),
+if NULL, will not extract embeddings}
 }
 \description{
 Extract out reduced dimensions and cell metadata to tibble

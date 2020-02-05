@@ -1,8 +1,10 @@
 
 ggplot2::theme_set(cowplot::theme_cowplot())
 
+#'@export
 palette_OkabeIto <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999")
 
+#'@export
 tableu_classic_palatte <-
   c("#1f77b4",
     "#aec7e8",
@@ -1246,6 +1248,8 @@ ExportToCellbrowserFast <- function(
 #' named vector is supplied then the cellbarcode will be
 #' prefixed with "name_".
 #' @param fdr fdr cutoff for cell calling
+#' @param cell_bc list of character vectors of cell ids to keep in output,
+#' if supplied cell calling will be skipped. Order must match paths argument
 #' @param ... additional arguments passed onto emptyDrops
 #'
 #' @return A list of named lists with slots:
@@ -1257,6 +1261,7 @@ ExportToCellbrowserFast <- function(
 #' @export
 preprocess_bus <- function(paths,
                            fdr = 0.01,
+                           cell_bc = NULL,
                            ...){
 
   res <- list()
@@ -1272,13 +1277,18 @@ preprocess_bus <- function(paths,
     mat <- BUSpaRse::read_count_output(mtx_path,
                                        name = mtx_prefix,
                                        tcc = FALSE)
+    if(is.null(cell_bc)){
+      barcode_ranks <- DropletUtils::barcodeRanks(mat)
 
-    barcode_ranks <- DropletUtils::barcodeRanks(mat)
+      empty_drops <- DropletUtils::emptyDrops(mat, ...)
 
-    empty_drops <- DropletUtils::emptyDrops(mat, ...)
-
-    is_cell <- empty_drops$FDR <= fdr
-    cell_bcs <- rownames(empty_drops)[which(is_cell)]
+      is_cell <- empty_drops$FDR <= fdr
+      cell_bcs <- rownames(empty_drops)[which(is_cell)]
+    } else {
+      cell_bcs <- cell_bc[[i]]
+      barcode_ranks <- data.frame()
+      empty_drops <- data.frame()
+    }
 
     cell_mat <- mat[, cell_bcs, drop = FALSE]
 
@@ -1290,16 +1300,17 @@ preprocess_bus <- function(paths,
         "_",
         colnames(cell_mat))
 
-      rownames(empty_drops) <- stringr::str_c(
-        prefix,
-        "_",
-        rownames(empty_drops))
+      if(is.null(cell_bc)){
+        rownames(empty_drops) <- stringr::str_c(
+          prefix,
+          "_",
+          rownames(empty_drops))
 
-      rownames(barcode_ranks) <- stringr::str_c(
-        prefix,
-        "_",
-        rownames(barcode_ranks))
-
+        rownames(barcode_ranks) <- stringr::str_c(
+          prefix,
+          "_",
+          rownames(barcode_ranks))
+      }
     }
     res[[i]] <- list(mtx = cell_mat,
                      barcode_ranks = barcode_ranks,
@@ -1308,5 +1319,74 @@ preprocess_bus <- function(paths,
 
   res
 }
+
+#' Calculate cluster sample diversity using Shannon Entropy
+#'
+#' @param obj Seurat object
+#' @param sample_id column name containing the per sample id
+#' @param group_id column name with cluster id
+#'
+#' @export
+calc_diversity <- function(obj,
+                           sample_id = "orig.ident",
+                           group_id = "coarse_clusters"){
+  mdata <- get_metadata(obj, embedding = NULL)
+  props <- group_by(mdata, !!sym(group_id)) %>%
+    mutate(n_cells = n()) %>%
+    group_by(!!sym(group_id), !!sym(sample_id)) %>%
+    summarize(n = n(),
+              n_cells = unique(n_cells),
+              prop = n / n_cells)
+
+  props <- split(props, props$coarse_clusters) %>%
+    purrr::map(~pull(.x, prop))
+
+  etp <- map_dfr(props, shannon_entropy) %>%
+    imap_dfr(~tibble(!!sym(group_id) := .y,
+                entropy = .x))
+
+  if(is.factor(mdata[[group_id]])){
+    etp <- mutate(etp,
+                  !!sym(group_id) := factor(!!sym(group_id),
+                                            levels = levels(mdata[[group_id]])))
+  }
+
+  res <- left_join(mdata, etp, by = group_id) %>%
+    as.data.frame() %>%
+    tibble::column_to_rownames("cell")
+
+  Seurat::AddMetaData(obj, res)
+
+}
+
+shannon_entropy <- function(x){
+  # H' = sum of pi * ln(pi) for each proportion
+  if(any(x > 1 | x < 0)){
+    stop("values must be between 0 and 1")
+  }
+
+  if(any(is.na(x))){
+    warning("NA values found, ignoring")
+  }
+
+  if(!isTRUE(all.equal(sum(x), 1))){
+    stop("proportions should sum to 1")
+  }
+
+  se <- -sum(x * log(x), na.rm = TRUE)
+
+  # scale by log(length(x)) to be between 0 and 1
+  if(length(x) == 1){
+    res <- 0
+  } else {
+    res <- se / log(length(x))
+  }
+
+  res
+}
+
+
+
+
 
 

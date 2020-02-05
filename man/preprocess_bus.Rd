@@ -4,7 +4,7 @@
 \alias{preprocess_bus}
 \title{Preprocessing for Bustools output}
 \usage{
-preprocess_bus(paths, fdr = 0.01, ...)
+preprocess_bus(paths, fdr = 0.01, cell_bc = NULL, ...)
 }
 \arguments{
 \item{paths}{paths to directories with mtx files. If a
@@ -12,6 +12,9 @@ named vector is supplied then the cellbarcode will be
 prefixed with "name_".}
 
 \item{fdr}{fdr cutoff for cell calling}
+
+\item{cell_bc}{list of character vectors of cell ids to keep in output,
+if supplied cell calling will be skipped. Order must match paths argument}
 
 \item{...}{additional arguments passed onto emptyDrops}
 }
