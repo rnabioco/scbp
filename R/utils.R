@@ -745,6 +745,10 @@ set_shared_orthologs <- function(so1, so2, orthologs){
 #' @param annotate_markers annotate markers using cellbrowser functionality
 #' @param cellbrowser_dir directory where cellbrowser binary lives
 #' @param color_skip no idea
+#' @param default_assay assay to export (RNA)
+#' @param assays character vector of additional assay expression matrices to export.
+#'  If supplied then the data matrix with be concatenated via rowbinding to the default assay matrix.
+#'  If a named character vector is supplied the name will be prefixed to the rows (i.e features).
 #'
 #' @export
 make_cellbrowser <- function(so,
@@ -762,6 +766,8 @@ make_cellbrowser <- function(so,
                              skip_markers = FALSE,
                              overwrite_cb_config = TRUE,
                              annotate_markers = TRUE,
+                             default_assay = "RNA",
+                             assays = NULL,
                              cellbrowser_dir = "/miniconda3/bin/"
                              ) {
 
@@ -788,6 +794,10 @@ make_cellbrowser <- function(so,
     stop("columns in column_list not found in object",
          call. = FALSE)
   }
+
+  column_list <- c(column_list,
+                  structure(c("nCount_RNA", "nFeature_RNA"),
+                            names = c("nCount_RNA", "nFeature_RNA")))
 
   so@meta.data <- so@meta.data[, column_list]
   colnames(so@meta.data) <- names(column_list)
@@ -839,7 +849,7 @@ make_cellbrowser <- function(so,
           ~tibble(clusterName = names(.x),
                   color = .x)) %>%
     as.data.frame() %>%
-    write_csv(col_file, col_names = F,  quote_escape = "none")
+    readr::write_csv(col_file, col_names = F,  quote_escape = "none")
 
   cols <- colnames(so@meta.data)
   names(cols) <- colnames(so@meta.data)
@@ -883,6 +893,15 @@ make_cellbrowser <- function(so,
     unlink(file.path(outdir, project, "markers.tsv"))
   }
 
+  if(!is.null(assays)){
+    for(i in seq_along(assays)){
+      assay <- assays[i]
+      so <- add_features(so, so@assays[[assay]]@data, names(assay), default_assay)
+    }
+  }
+
+  DefaultAssay(so) <- default_assay
+
   do.call(function(...) {ExportToCellbrowserFast(so,
                                              dir = file.path(outdir, project),
                                              dataset.name = project,
@@ -896,7 +915,7 @@ make_cellbrowser <- function(so,
   # add color line to config
 
   outline <- paste0("\ncolors=", '"', normalizePath(col_file), '"')
-  write_lines(outline, cb_config_file, append = TRUE)
+  readr::write_lines(outline, cb_config_file, append = TRUE)
 
 }
 
@@ -1386,6 +1405,29 @@ shannon_entropy <- function(x){
 }
 
 
+#' add features (i.e. rows) to a Seurat object
+#' used for exporting various cell level measurements
+#' for labeled in ucsc cell browser. Note that column names much be
+#' identical to input seurat obj. Only the 'data' matrix will be altered
+#' @param so seurat object
+#' @param mat data to add to expression matrix
+#' @param prefix optional prefix to add to rownames of mat before
+#' @param assay assay to which data will be appended, defaults to RNA
+#' merging
+#' @importFrom stringr str_c
+add_features <- function(so,
+                         mat,
+                         prefix = NULL,
+                         assay = "RNA") {
+
+  mat <- mat[, colnames(so), drop = FALSE]
+  mat <- as(mat, "dgCMatrix")
+  if(!is.null(prefix)){
+    rownames(mat) <- stringr::str_c(prefix, rownames(mat))
+  }
+  so@assays[[assay]]@data <- rbind(so@assays[[assay]]@data, mat)
+  so
+}
 
 
 

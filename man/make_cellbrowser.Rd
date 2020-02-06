@@ -21,6 +21,8 @@ make_cellbrowser(
   skip_markers = FALSE,
   overwrite_cb_config = TRUE,
   annotate_markers = TRUE,
+  default_assay = "RNA",
+  assays = NULL,
   cellbrowser_dir = "/miniconda3/bin/"
 )
 }
@@ -54,6 +56,12 @@ make_cellbrowser(
 \item{overwrite_cb_config}{overwritec cellbrowser.conf file}
 
 \item{annotate_markers}{annotate markers using cellbrowser functionality}
+
+\item{default_assay}{assay to export (RNA)}
+
+\item{assays}{character vector of additional assay expression matrices to export.
+If supplied then the data matrix with be concatenated via rowbinding to the default assay matrix.
+If a named character vector is supplied the name will be prefixed to the rows (i.e features).}
 
 \item{cellbrowser_dir}{directory where cellbrowser binary lives}
 }
