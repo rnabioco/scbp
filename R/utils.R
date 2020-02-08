@@ -1145,7 +1145,8 @@ ExportToCellbrowserFast <- function(
       write.table(x = df, sep = "\t", file = z, quote = FALSE, row.names = FALSE)
       close(con = z)
     } else if (use_datatable) {
-      data.table::fwrite(x = df, file = gzPath, compress = "gzip")
+      data.table::fwrite(x = df, file = gzPath,
+                         sep = "\t", compress = "gzip")
     } else {
       readr::write_tsv(x = df, path = gzPath)
     }
@@ -1177,7 +1178,8 @@ ExportToCellbrowserFast <- function(
           row.names = FALSE
         )
       } else if (use_datatable) {
-        data.table::fwrite(x = df[order, ], file = fname, compress = "gzip")
+        data.table::fwrite(x = df[order, ], file = fname,
+                           sep = "\t")
       } else {
         readr::write_tsv(x = df[order, ], path = fname)
       }
@@ -1213,7 +1215,7 @@ ExportToCellbrowserFast <- function(
     } else if (use_datatable) {
       data.table::fwrite(x = df[order, ],
                         file = fname,
-                        compress = "gzip")
+                        sep = "\t")
     } else {
       readr::write_tsv(x = df[order, ],
                        path = fname)
