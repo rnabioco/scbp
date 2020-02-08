@@ -5,14 +5,24 @@
 \title{Compare two seurat objects from different species and return
 matrices with one-to-one orthologs.}
 \usage{
-set_shared_orthologs(so1, so2, orthologs)
+set_shared_orthologs(
+  so1,
+  so2,
+  orthologs,
+  col_species_1 = "external_gene_name",
+  col_species_2 = "mmusculus_homolog_associated_gene_name"
+)
 }
 \arguments{
-\item{so1}{suerat object}
+\item{so1}{seurat object}
 
 \item{so2}{seurat object}
 
 \item{orthologs}{data.frame with ortholog info}
+
+\item{col_species_1}{column name with species 1 in data.frame}
+
+\item{col_species_2}{column name with species 2 in data.frame}
 }
 \description{
 Compare two seurat objects from different species and return

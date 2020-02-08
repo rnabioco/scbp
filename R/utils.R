@@ -575,7 +575,40 @@ get_metadata <- function(obj, ..., embedding = names(obj@reductions)) {
   res
 }
 
+#' Get cell counts from seurat object
+#' @param sobj seurat object
+#' @param ... grouping columns (quoted)
+#'
+#' @export
+get_counts <- function(obj, ...) {
+  group_cols <- c(...)
+  mdata <- get_metadata(obj, embedding = NULL)
+  res <- group_by_at(mdata, vars(all_of(group_cols)))
+  res <- res %>%
+    summarize(cell_counts = n()) %>%
+    ungroup()
+  res
+}
 
+#' Get cell counts from seurat object
+#' @param sobj seurat object
+#' @param row_var meta.data column to group for counts. will
+#' be rows in the output matrix
+#' @param col_var meta.data column to group for counts. will
+#' be columns in the output matrix
+#' @importFrom tidyr pivot_wider
+#' @importFrom tibble column_to_rownames
+#' @export
+get_cell_count_matrix <- function(obj, row_var, col_var){
+  res <- get_counts(obj, row_var, col_var)
+  res <- tidyr::pivot_wider(res,
+              names_from = col_var,
+              values_from = "cell_counts")
+  res <- tibble::column_to_rownames(res, var = row_var)
+  res
+}
+
+#'
 #' plot feature across multiple panels split by group
 #' @param sobj seurat object
 #' @param feature feature to plot
@@ -692,16 +725,20 @@ jaccard_lists <- function(x, y){
 
 #' Compare two seurat objects from different species and return
 #' matrices with one-to-one orthologs.
-#' @param so1 suerat object
+#' @param so1 seurat object
 #' @param so2 seurat object
 #' @param orthologs data.frame with ortholog info
+#' @param col_species_1 column name with species 1 in data.frame
+#' @param col_species_2 column name with species 2 in data.frame
 #' @export
-set_shared_orthologs <- function(so1, so2, orthologs){
+set_shared_orthologs <- function(so1, so2, orthologs,
+                                 col_species_1 = "external_gene_name",
+                                 col_species_2 = "mmusculus_homolog_associated_gene_name"){
   mat1 <- so1@assays$RNA@data
   mat2 <- so2@assays$RNA@data
 
-  mat1_orthos <- left_join(tibble(id = rownames(mat1)), orthologs, by = c("id" = "external_gene_name"))
-  mat2_orthos <- left_join(tibble(id = rownames(mat2)), orthologs, by = c("id" = "mmusculus_homolog_associated_gene_name"))
+  mat1_orthos <- left_join(tibble(id = rownames(mat1)), orthologs, by = c("id" = col_species_1))
+  mat2_orthos <- left_join(tibble(id = rownames(mat2)), orthologs, by = c("id" = col_species_2))
 
   if(!all(mat2_orthos$id == rownames(mat2))){
     stop("check ortholog table, not 1 to 1 mapping")
@@ -1061,7 +1098,7 @@ ExportToCellbrowserFast <- function(
   vars <- c(...)
 
   use_readr <- Seurat:::PackageCheck("readr", error = FALSE)
-
+  use_datatable <- Seurat:::PackageCheck("data.table", error = FALSE)
   if (is.null(x = vars)) {
     vars <- c("nCount_RNA", "nFeature_RNA")
     if (length(x = levels(x = Seurat::Idents(object = object))) > 1) {
@@ -1107,6 +1144,8 @@ ExportToCellbrowserFast <- function(
       z <- gzfile(gzPath, "w")
       write.table(x = df, sep = "\t", file = z, quote = FALSE, row.names = FALSE)
       close(con = z)
+    } else if (use_datatable) {
+      data.table::fwrite(x = df, file = gzPath, compress = "gzip")
     } else {
       readr::write_tsv(x = df, path = gzPath)
     }
@@ -1137,6 +1176,8 @@ ExportToCellbrowserFast <- function(
           quote = FALSE,
           row.names = FALSE
         )
+      } else if (use_datatable) {
+        data.table::fwrite(x = df[order, ], file = fname, compress = "gzip")
       } else {
         readr::write_tsv(x = df[order, ], path = fname)
       }
@@ -1169,6 +1210,10 @@ ExportToCellbrowserFast <- function(
         quote = FALSE,
         row.names = FALSE
       )
+    } else if (use_datatable) {
+      data.table::fwrite(x = df[order, ],
+                        file = fname,
+                        compress = "gzip")
     } else {
       readr::write_tsv(x = df[order, ],
                        path = fname)
@@ -1357,7 +1402,7 @@ calc_diversity <- function(obj,
               n_cells = unique(n_cells),
               prop = n / n_cells)
 
-  props <- split(props, props$coarse_clusters) %>%
+  props <- split(props, props[[group_id]]) %>%
     purrr::map(~pull(.x, prop))
 
   etp <- map_dfr(props, shannon_entropy) %>%

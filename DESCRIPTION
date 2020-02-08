@@ -32,4 +32,6 @@ Imports:
     fgsea,
     DropletUtils,
     BUSpaRse
+Suggests:
+    data.table
 RoxygenNote: 7.0.2
