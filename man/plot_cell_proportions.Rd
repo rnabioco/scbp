@@ -9,7 +9,7 @@ plot_cell_proportions(
   sample_id = "orig.ident",
   group_id = "coarse_clusters",
   facet_by = NULL,
-  cols = NULL
+  cols = discrete_palette_default
 )
 }
 \arguments{
