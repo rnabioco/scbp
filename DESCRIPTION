@@ -25,13 +25,15 @@ Imports:
     readr,
     tools,
     openxlsx,
+    glue,
     here,
     tibble,
     dplyr,
     purrr,
     fgsea,
     DropletUtils,
-    BUSpaRse
+    BUSpaRse,
+    rmarkdown
 Suggests:
     data.table
 RoxygenNote: 7.0.2

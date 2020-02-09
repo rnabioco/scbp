@@ -762,10 +762,14 @@ set_shared_orthologs <- function(so1, so2, orthologs,
 
   list(mat1 = mat1, mat2 = mat2)
 }
+
+
+
 #' Cell browser wrapper
 #' Builds cell browser with better defaults
 #' @param so seurat object
-#' @param column_list columns to keep in browser
+#' @param column_list named list of columns to keep in browser. Names will be
+#' displayed in the browser.
 #' @param primary_color_palette palette for catagorical variables
 #' @param secondary_color_palette secondary palette for catagorical variables
 #' @param secondary_cols columns to color by secondary_color_palette
@@ -786,7 +790,17 @@ set_shared_orthologs <- function(so1, so2, orthologs,
 #' @param assays character vector of additional assay expression matrices to export.
 #'  If supplied then the data matrix with be concatenated via rowbinding to the default assay matrix.
 #'  If a named character vector is supplied the name will be prefixed to the rows (i.e features).
+#' @param description named list with title and description fields to be rendered
+#' into summary.html. Title will default to the project title.
+#' @param config named list with custom entries to add to cellbrowser.conf file.
+#' e.g. (config = list(priority = 1, radius = 5, alpha = 0.3)). See UCSC cellbrowser documentation for
+#' allowable entries.
+#' @param summary_html_format markdown formatted glue expression for formatting title and description into
+#' summary.html file
 #'
+#' @importFrom glue glue
+#' @importFrom readr write_lines
+#' @importFrom purrr map walk
 #' @export
 make_cellbrowser <- function(so,
                              column_list = NULL,
@@ -805,7 +819,10 @@ make_cellbrowser <- function(so,
                              annotate_markers = TRUE,
                              default_assay = "RNA",
                              assays = NULL,
-                             cellbrowser_dir = "/miniconda3/bin/"
+                             cellbrowser_dir = "/miniconda3/bin/",
+                             description = NULL,
+                             config = NULL,
+                             summary_html_format = "**{title}**  \n{description}"
                              ) {
 
   dir.create(file.path(outdir, "markers"),
@@ -830,6 +847,10 @@ make_cellbrowser <- function(so,
   if(!(all(column_list %in% cols))){
     stop("columns in column_list not found in object",
          call. = FALSE)
+  }
+
+  if(is.null(names(column_list))){
+    names(column_list) <- column_list
   }
 
   column_list <- c(column_list,
@@ -954,6 +975,42 @@ make_cellbrowser <- function(so,
   outline <- paste0("\ncolors=", '"', normalizePath(col_file), '"')
   readr::write_lines(outline, cb_config_file, append = TRUE)
 
+  if(!is.null(config)){
+    if(!is.list(config) || is.null(names(config))){
+      stop("config must be a named list")
+    }
+
+    config_params <- purrr::imap(config,
+               function(value, key){
+                 res <- glue::glue("\n{key}={value}")
+                 message("scbp:: Adding ", res ," to cellbrowser.conf")
+                 res
+               })
+    purrr::walk(config_params,
+                ~readr::write_lines(.x, cb_config_file, append = TRUE))
+  }
+
+  if(!is.null(description)){
+    if(!"title" %in% names(description)){
+      description$title <- project
+    }
+
+    message("scbp:: Writing summary.html to ", file.path(outdir, project))
+    md <- glue(summary_html_format,
+               title = description$title,
+               description = description$description)
+
+    f <- tempfile(fileext = ".md")
+    on.exit(unlink(f))
+    readr::write_lines(md, f)
+    rmarkdown::render(f,
+                      output_format = "html_document",
+                      output_file = "summary.html",
+                      output_dir = file.path(outdir, project),
+                      output_options = list(pandoc_args = "--quiet"),
+                      quiet = TRUE)
+    on.exit(unlink(f))
+  }
 }
 
 #' Build cellbrowser

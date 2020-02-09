@@ -23,13 +23,17 @@ make_cellbrowser(
   annotate_markers = TRUE,
   default_assay = "RNA",
   assays = NULL,
-  cellbrowser_dir = "/miniconda3/bin/"
+  cellbrowser_dir = "/miniconda3/bin/",
+  description = NULL,
+  config = NULL,
+  summary_html_format = "**{title}**  \\n{description}"
 )
 }
 \arguments{
 \item{so}{seurat object}
 
-\item{column_list}{columns to keep in browser}
+\item{column_list}{named list of columns to keep in browser. Names will be
+displayed in the browser.}
 
 \item{primary_color_palette}{palette for catagorical variables}
 
@@ -64,6 +68,16 @@ If supplied then the data matrix with be concatenated via rowbinding to the defa
 If a named character vector is supplied the name will be prefixed to the rows (i.e features).}
 
 \item{cellbrowser_dir}{directory where cellbrowser binary lives}
+
+\item{description}{named list with title and description fields to be rendered
+into summary.html. Title will default to the project title.}
+
+\item{config}{named list with custom entries to add to cellbrowser.conf file.
+e.g. (config = list(priority = 1, radius = 5, alpha = 0.3)). See UCSC cellbrowser documentation for
+allowable entries.}
+
+\item{summary_html_format}{markdown formatted glue expression for formatting title and description into
+summary.html file}
 }
 \description{
 Cell browser wrapper
