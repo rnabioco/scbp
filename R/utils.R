@@ -635,7 +635,7 @@ make_cellbrowser <- function(so,
     unlink(file.path(outdir, project, "markers.tsv"))
   }
 
-  if(!is.null(assays)){
+  if(!is.null(assays) && !skip_expr_matrix){
     for(i in seq_along(assays)){
       assay <- assays[i]
       so <- add_features(so, so@assays[[assay]]@data, names(assay), default_assay)
