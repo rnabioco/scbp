@@ -452,14 +452,13 @@ set_shared_orthologs <- function(so1, so2, orthologs,
 #' Cell browser wrapper
 #' Builds cell browser with better defaults
 #' @param so seurat object
-#' @param column_list named list of columns to keep in browser. Names will be
+#' @param column_list named vector of columns to keep in browser. Names will be
 #' displayed in the browser.
 #' @param primary_color_palette palette for catagorical variables
 #' @param secondary_color_palette secondary palette for catagorical variables
 #' @param secondary_cols columns to color by secondary_color_palette
 #' @param outdir output directory for cellbrowser
 #' @param project project string
-#' @param marker_file seurat marker file path
 #' @param marker_file seurat marker file path
 #' @param ident default variable for labeling
 #' @param embeddings embeddings to show in browser
@@ -469,7 +468,6 @@ set_shared_orthologs <- function(so1, so2, orthologs,
 #' @param overwrite_cb_config overwritec cellbrowser.conf file
 #' @param annotate_markers annotate markers using cellbrowser functionality
 #' @param cellbrowser_dir directory where cellbrowser binary lives
-#' @param color_skip no idea
 #' @param default_assay assay to export (RNA)
 #' @param assays character vector of additional assay expression matrices to export.
 #'  If supplied then the data matrix with be concatenated via rowbinding to the default assay matrix.

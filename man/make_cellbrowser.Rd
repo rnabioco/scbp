@@ -32,7 +32,7 @@ make_cellbrowser(
 \arguments{
 \item{so}{seurat object}
 
-\item{column_list}{named list of columns to keep in browser. Names will be
+\item{column_list}{named vector of columns to keep in browser. Names will be
 displayed in the browser.}
 
 \item{primary_color_palette}{palette for catagorical variables}

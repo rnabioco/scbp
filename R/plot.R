@@ -243,7 +243,10 @@ plot_feature <- function(seurat_obj,
 #' @rdname plot_feature
 #' @export
 plot_umap <- function(seurat_obj, ...){
-  plot_feature(seurat_obj, embedding = "umap", ...)
+  cmd_args <- list(seurat_obj = seurat_obj,
+                   embedding = "umap",
+                   ...)
+  do.call(plot_feature, cmd_args)
 }
 
 #' Plot cells in tSNE space
@@ -254,7 +257,10 @@ plot_umap <- function(seurat_obj, ...){
 #' @rdname plot_feature
 #' @export
 plot_tsne <- function(seurat_obj, ...){
-  plot_feature(seurat_obj, embedding = "tsne", ...)
+  cmd_args <- list(seurat_obj = seurat_obj,
+                   embedding = "tsne",
+                   ...)
+  do.call(plot_feature, cmd_args)
 }
 
 #' Plot cells in PCA space
@@ -265,7 +271,10 @@ plot_tsne <- function(seurat_obj, ...){
 #' @rdname plot_feature
 #' @export
 plot_pca <- function(seurat_obj, ...){
-  plot_feature(seurat_obj, embedding = "pca", ...)
+  cmd_args <- list(seurat_obj = seurat_obj,
+                   embedding = "pca",
+                   ...)
+  do.call(plot_feature, cmd_args)
 }
 
 #' Plot cells in Harmony space
@@ -276,7 +285,10 @@ plot_pca <- function(seurat_obj, ...){
 #' @rdname plot_feature
 #' @export
 plot_harmony <- function(seurat_obj, ...){
-  plot_feature(seurat_obj, embedding = "harmony_umap", ...)
+  cmd_args <- list(seurat_obj = seurat_obj,
+                   embedding = "harmony_umap",
+                   ...)
+  do.call(plot_feature, cmd_args)
 }
 
 #' plot feature across multiple panels split by group
@@ -360,6 +372,73 @@ plot_violin <- function(df, .x, .y,
   p
 }
 
+#' @export
+plot_violins <- function(seurat_obj, group, features,
+                         split_by = NULL,
+                        .size = 0.50,
+                        .width = 1,
+                        .scale = "width",
+                        .alpha = 1,
+                        cols = discrete_palette_default,
+                        rotate_x_text = TRUE,
+                        arrange_by_fill = TRUE,
+                        order_by_input = TRUE){
+
+  if(length(features) > 1){
+    multiple_features <- TRUE
+    df <- get_metadata(seurat_obj, features, embedding = NULL) %>%
+      tidyr::pivot_longer(cols = one_of(features),
+                          names_to = "feature",
+                          values_to = "expr")
+  } else {
+    multiple_features <- FALSE
+    df <- get_metadata(seurat_obj, features, embedding = NULL)
+  }
+
+  if(order_by_input && multiple_features){
+    df <- mutate(df, feature = factor(feature, levels = features))
+  }
+
+  if(!is.null(split_by)){
+    fill_value <- split_by
+  } else {
+    fill_value <- group
+  }
+
+  if (arrange_by_fill){
+    tmp <- rlang::sym(group)
+    df <- dplyr::arrange(df, !!tmp)
+    if(!is.factor(df[[group]])){
+      df[[group]] <- factor(df[[group]], levels = unique(df[[group]]))
+    }
+  }
+
+  if(multiple_features){
+    p <- ggplot(df, aes_string(x = group, y = "expr")) +
+      geom_violin(aes_string(fill = fill_value),
+                  size = .size,
+                  scale = .scale,
+                  alpha = .alpha) +
+      facet_grid(as.formula("feature ~ ."),
+                 scales = "free_y", switch = "y")
+  } else {
+    p <- ggplot(df, aes_string(x = group,
+                               y = str_c("`", features, "`"))) +
+      geom_violin(aes_string(fill = fill_value),
+                  size = .size,
+                  scale = .scale,
+                  alpha = .alpha)
+  }
+
+  if(rotate_x_text){
+    p <- p + theme(axis.text.x = element_text(angle =90,
+                                              hjust = 1,
+                                              vjust = 0.5))
+  }
+  p <- p + scale_fill_manual(values = cols)
+
+  p
+}
 
 #' Plot barcode distribution
 #'
