@@ -29,7 +29,8 @@ plot_feature(
   minimal_theme = FALSE,
   group = NULL,
   dims = c(1, 2),
-  sorted = c("by_feature", "none", "random")
+  sorted = c("by_feature", "none", "random"),
+  transform = "identity"
 )
 
 plot_umap(seurat_obj, ...)
@@ -93,6 +94,9 @@ If false, then the minumum value for the plotted feature will be used.}
 
 \item{sorted}{should the plotting be determined by sorting in ascending order? Default
 is sorted by_feature (one of "by_feature", "none", "random")}
+
+\item{transform}{adrgument o be passed to scale_color_gradientn for continuous data. defaults
+to no transformation (i.e. "identity") See ?continous_scale for availabl transforms.}
 
 \item{\dots}{Additional parameters to pass to plot_feature}
 

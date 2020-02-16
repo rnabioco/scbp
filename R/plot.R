@@ -30,6 +30,8 @@ ggplot2::theme_set(cowplot::theme_cowplot())
 #' @param dims which dims to plot from embedding, defaults to first and second, i.e. c(1,2).
 #' @param sorted should the plotting be determined by sorting in ascending order? Default
 #' is sorted by_feature (one of "by_feature", "none", "random")
+#' @param transform adrgument o be passed to scale_color_gradientn for continuous data. defaults
+#' to no transformation (i.e. "identity") See ?continous_scale for availabl transforms.
 #' @export
 plot_feature <- function(seurat_obj,
                          feature = NULL,
@@ -50,7 +52,8 @@ plot_feature <- function(seurat_obj,
                          minimal_theme = FALSE,
                          group = NULL,
                          dims = c(1, 2),
-                         sorted = c("by_feature", "none", "random")){
+                         sorted = c("by_feature", "none", "random"),
+                         transform = "identity"){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -188,18 +191,26 @@ plot_feature <- function(seurat_obj,
       p <- p + scale_color_viridis(discrete = F,
                                    direction = -1,
                                    option = col_pal,
-                                   limits = max_y, name = legend_title)
+                                   limits = max_y,
+                                   name = legend_title,
+                                   trans = transform)
     } else if (palette_type == "brewer") {
       p <- p + scale_color_distiller(limits = max_y,
                                      palette = col_pal,
-                                     direction = 1, name = legend_title)
+                                     direction = 1,
+                                     name = legend_title,
+                                     trans = transform)
     } else if (palette_type == "cloupe") {
       p <- p + scale_color_gradientn(limits = max_y,
-                                     colors = cols, name = legend_title)
+                                     colors = cols,
+                                     name = legend_title,
+                                     trans = transform)
     }
   } else if (!is.null(.cols) && !discrete){
     p <- p + scale_color_gradientn(limits = max_y,
-                                   colors = .cols, name = legend_title)
+                                   colors = .cols,
+                                   name = legend_title,
+                                   trans = transform)
   } else {
 
     if(!is.null(.cols)) {
@@ -241,12 +252,13 @@ plot_feature <- function(seurat_obj,
 #' @param \dots Additional parameters to pass to plot_feature
 #'
 #' @rdname plot_feature
+#' @importFrom Gmisc fastDoCall
 #' @export
 plot_umap <- function(seurat_obj, ...){
   cmd_args <- list(seurat_obj = seurat_obj,
                    embedding = "umap",
                    ...)
-  do.call(plot_feature, cmd_args)
+  Gmisc::fastDoCall(plot_feature, cmd_args)
 }
 
 #' Plot cells in tSNE space
@@ -260,7 +272,9 @@ plot_tsne <- function(seurat_obj, ...){
   cmd_args <- list(seurat_obj = seurat_obj,
                    embedding = "tsne",
                    ...)
-  do.call(plot_feature, cmd_args)
+  # do.call is really terrible with large objects and
+  # will not propagate errors quickly, use other function
+  Gmisc::fastDoCall(plot_feature, cmd_args)
 }
 
 #' Plot cells in PCA space
@@ -274,7 +288,7 @@ plot_pca <- function(seurat_obj, ...){
   cmd_args <- list(seurat_obj = seurat_obj,
                    embedding = "pca",
                    ...)
-  do.call(plot_feature, cmd_args)
+  Gmisc::fastDoCall(plot_feature, cmd_args)
 }
 
 #' Plot cells in Harmony space
@@ -288,7 +302,7 @@ plot_harmony <- function(seurat_obj, ...){
   cmd_args <- list(seurat_obj = seurat_obj,
                    embedding = "harmony_umap",
                    ...)
-  do.call(plot_feature, cmd_args)
+  Gmisc::fastDoCall(plot_feature, cmd_args)
 }
 
 #' plot feature across multiple panels split by group
