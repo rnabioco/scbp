@@ -925,7 +925,7 @@ ExportToCellbrowserFast <- function(
 
     }
     conf <- sprintf(
-      '{"file": "%s.coords.tsv", "shortLabel": "Seurat %1$s"}',
+      '{"file": "%s.coords.tsv", "shortLabel": "%1$s"}',
       reduction
     )
     embeddings.conf <- c(embeddings.conf, conf)
