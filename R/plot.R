@@ -32,6 +32,7 @@ ggplot2::theme_set(cowplot::theme_cowplot())
 #' is sorted by_feature (one of "by_feature", "none", "random")
 #' @param transform adrgument o be passed to scale_color_gradientn for continuous data. defaults
 #' to no transformation (i.e. "identity") See ?continous_scale for availabl transforms.
+#' @param na_col Color for NA values (default = "grey")
 #' @export
 plot_feature <- function(seurat_obj,
                          feature = NULL,
@@ -53,7 +54,8 @@ plot_feature <- function(seurat_obj,
                          group = NULL,
                          dims = c(1, 2),
                          sorted = c("by_feature", "none", "random"),
-                         transform = "identity"){
+                         transform = "identity",
+                         na_col = "grey"){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -167,8 +169,8 @@ plot_feature <- function(seurat_obj,
 
   ## handle legend limit
   if (is.null(max_y) & !discrete) {
-    min_value <- ifelse(show_negative, min(embed_dat[[color_aes_str]]), 0L)
-    max_y <- c(min_value, max(embed_dat[[color_aes_str]]))
+    min_value <- ifelse(show_negative, min(embed_dat[[color_aes_str]], na.rm = TRUE), 0L)
+    max_y <- c(min_value, max(embed_dat[[color_aes_str]], na.rm = TRUE))
   } else if (discrete & is.null(max_y)){
     max_y <- c(NA, NA)
   }
@@ -193,36 +195,42 @@ plot_feature <- function(seurat_obj,
                                    option = col_pal,
                                    limits = max_y,
                                    name = legend_title,
-                                   trans = transform)
+                                   trans = transform,
+                                   na.value = na_col)
     } else if (palette_type == "brewer") {
       p <- p + scale_color_distiller(limits = max_y,
                                      palette = col_pal,
                                      direction = 1,
                                      name = legend_title,
-                                     trans = transform)
+                                     trans = transform,
+                                     na.value = na_col)
     } else if (palette_type == "cloupe") {
       p <- p + scale_color_gradientn(limits = max_y,
                                      colors = cols,
                                      name = legend_title,
-                                     trans = transform)
+                                     trans = transform,
+                                     na.value = na_col)
     }
   } else if (!is.null(.cols) && !discrete){
     p <- p + scale_color_gradientn(limits = max_y,
                                    colors = .cols,
                                    name = legend_title,
-                                   trans = transform)
+                                   trans = transform,
+                                   na.value = na_col)
   } else {
 
     if(!is.null(.cols)) {
       # use colors provided
       p <- p + scale_color_manual(
         values = .cols,
-        name = legend_title
+        name = legend_title,
+        na.value = na_col
       )
     } else {
       p <- p + scale_color_manual(
         values = discrete_palette_default,
-        name = legend_title
+        name = legend_title,
+        na.value = na_col
       )
     }
   }

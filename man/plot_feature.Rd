@@ -30,7 +30,8 @@ plot_feature(
   group = NULL,
   dims = c(1, 2),
   sorted = c("by_feature", "none", "random"),
-  transform = "identity"
+  transform = "identity",
+  na_col = "grey"
 )
 
 plot_umap(seurat_obj, ...)
@@ -97,6 +98,8 @@ is sorted by_feature (one of "by_feature", "none", "random")}
 
 \item{transform}{adrgument o be passed to scale_color_gradientn for continuous data. defaults
 to no transformation (i.e. "identity") See ?continous_scale for availabl transforms.}
+
+\item{na_col}{Color for NA values (default = "grey")}
 
 \item{\dots}{Additional parameters to pass to plot_feature}
 
