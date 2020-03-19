@@ -31,7 +31,7 @@ ggplot2::theme_set(cowplot::theme_cowplot())
 #' @param sorted should the plotting be determined by sorting in ascending order? Default
 #' is sorted by_feature (one of "by_feature", "none", "random")
 #' @param transform adrgument o be passed to scale_color_gradientn for continuous data. defaults
-#' to no transformation (i.e. "identity") See ?continous_scale for availabl transforms.
+#' to no transformation (i.e. "identity") See ?continous_scale for available transforms.
 #' @param na_col Color for NA values (default = "grey")
 #' @export
 plot_feature <- function(seurat_obj,
@@ -525,13 +525,7 @@ plot_cell_proportions <- function(obj,
   mdata <- get_metadata(obj, embedding = NULL)
 
   to_keep <- c(sample_id, group_id, facet_by)
-  cell_summary <- group_by(mdata, !!sym(sample_id)) %>%
-    mutate(n_cells = n()) %>%
-    ungroup() %>%
-    select(all_of(to_keep), n_cells) %>%
-    mutate(n_cells = str_c("n = ", n_cells),
-           n_cells = str_pad(n_cells, max(nchar(n_cells)), "right")) %>%
-    unique()
+
 
   if(!is.null(facet_by)){
     per_patient <- group_by(mdata, !!sym(sample_id)) %>%
@@ -539,12 +533,29 @@ plot_cell_proportions <- function(obj,
       group_by(!!sym(sample_id), !!sym(group_id), !!sym(facet_by)) %>%
       summarize(n = n(),
                 prop_cell_type = n / unique(n_cells))
+
+    cell_summary <- group_by(mdata, !!sym(sample_id), !!sym(facet_by)) %>%
+      mutate(n_cells = n()) %>%
+      ungroup() %>%
+      select(all_of(to_keep), n_cells) %>%
+      mutate(n_cells = str_c("n = ", n_cells),
+             n_cells = str_pad(n_cells, max(nchar(n_cells)), "right")) %>%
+      unique()
+
   } else {
     per_patient <- group_by(mdata, !!sym(sample_id)) %>%
       mutate(n_cells = n()) %>%
       group_by(!!sym(sample_id), !!sym(group_id)) %>%
       summarize(n = n(),
                 prop_cell_type = n / unique(n_cells))
+
+    cell_summary <- group_by(mdata, !!sym(sample_id)) %>%
+      mutate(n_cells = n()) %>%
+      ungroup() %>%
+      select(all_of(to_keep), n_cells) %>%
+      mutate(n_cells = str_c("n = ", n_cells),
+             n_cells = str_pad(n_cells, max(nchar(n_cells)), "right")) %>%
+      unique()
   }
 
   p <- ggplot(per_patient,

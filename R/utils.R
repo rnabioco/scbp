@@ -273,14 +273,16 @@ get_metadata <- function(obj, ..., embedding = names(obj@reductions)) {
                      by = "cell")
 
   }
-  vargs <-  list(...)
 
-  if(length(vargs) > 0){
-    res <- Seurat::FetchData(obj, vars = ...) %>%
-      rownames_to_column("cell") %>%
-      left_join(res,
-                .,
-                by = "cell")
+  if (length(list(...)) > 0) {
+    cols_to_get <- setdiff(..., colnames(obj@meta.data))
+    if (length(cols_to_get) > 0) {
+      res <- Seurat::FetchData(obj, vars = cols_to_get) %>%
+        rownames_to_column("cell") %>%
+        left_join(res,
+                  .,
+                  by = "cell")
+    }
   }
   res
 }
@@ -313,7 +315,8 @@ get_cell_count_matrix <- function(obj, row_var, col_var){
   res <- get_counts(obj, row_var, col_var)
   res <- tidyr::pivot_wider(res,
               names_from = col_var,
-              values_from = "cell_counts")
+              values_from = "cell_counts",
+              values_fill = list(cell_counts = 0L))
   res <- tibble::column_to_rownames(res, var = row_var)
   res
 }
