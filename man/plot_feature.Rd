@@ -97,7 +97,7 @@ If false, then the minumum value for the plotted feature will be used.}
 is sorted by_feature (one of "by_feature", "none", "random")}
 
 \item{transform}{adrgument o be passed to scale_color_gradientn for continuous data. defaults
-to no transformation (i.e. "identity") See ?continous_scale for availabl transforms.}
+to no transformation (i.e. "identity") See ?continous_scale for available transforms.}
 
 \item{na_col}{Color for NA values (default = "grey")}
 

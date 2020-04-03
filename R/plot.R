@@ -583,3 +583,123 @@ plot_cell_proportions <- function(obj,
   p
 
 }
+
+#' Plot heatmap per cluster/cell-type
+#'
+#'@param obj Seurat object
+#'@param features features to plot as rows
+#'@param group column from meta data to use to group cells across columns
+#'@param annotations additional meta.data columns to add as column annotations
+#'supplied as a character vector, defaults to display just group
+#'@param average if TRUE, return average values per group rather than display all cells
+#'@param slot data slot to retrive values defaults to scale.data
+#'@param max_disp max/min value to display (2.5), only applied for scale.data
+#'@param col_palettes list of alternative palettes to use for each annotation + group
+#'variable supplied.
+#'@param default_discrete_pal defatul discrete palette, defaults to scbp::discrete_palette_default,
+#'@param default_continuous_pal default continuous color palette, defaults to viridis::inferno(256)
+#'@param hmap_options named list of options that are passed to ComplexHeatmap::Heatmap
+#'@examples
+#'
+#' plot_heatmap(Seurat::pbmc_small,
+#'              features = rownames(Seurat::pbmc_small@assays$RNA@scale.data),
+#'              group = "letter.idents",
+#'              annotations = colnames(Seurat::pbmc_small@meta.data))
+#'
+#'@importFrom ComplexHeatmap Heatmap HeatmapAnnotation draw
+#'@importFrom circlize colorRamp2
+#'@importFrom viridis inferno viridis
+#'@import Seurat
+#'@export
+plot_heatmap <- function(obj,
+                         features,
+                         group,
+                         annotations = group,
+                         average = FALSE,
+                         slot = "scale.data",
+                         max_disp = 2.5,
+                         col_palettes = NULL,
+                         default_discrete_pal = discrete_palette_default,
+                         default_continuous_pal_fxn = viridis::inferno(256),
+                         hmap_options = list(
+                           name = "Log Normalized\nAverage Z-scores",
+                           col = viridis::viridis(256),
+                           cluster_rows = FALSE,
+                           cluster_columns = FALSE,
+                           row_names_side = "left",
+                           column_names_side = "top",
+                           column_names_rot = 0)) {
+
+  Idents(obj) <- group
+  assay <- DefaultAssay(obj)
+  annotations <- union(group, annotations)
+
+  if(is.null(col_palettes)){
+    col_palettes <- map(seq_along(annotations), ~scbp::discrete_palette_default)
+  } else {
+    stopifnot(length(col_palettes) == length(annotations),
+              "col_palettes should be a list of col_palettes the same length as the # of annotations")
+  }
+
+  if(average){
+    mat <- AverageExpression(obj,
+                             slot = slot,
+                             features = unique(features))[[assay]][features, ] %>%
+      as.matrix()
+    annot_df <- obj@meta.data[, annotations, drop = FALSE] %>%
+      group_by(!!sym(group)) %>%
+      summarize_all(~first(.)) %>%
+      as.data.frame()
+    show_cols <- TRUE
+  } else {
+    mat <- GetAssayData(obj, slot = slot)[features, ] %>%
+      as.matrix()
+    annot_df <- obj@meta.data[, annotations, drop = FALSE]
+    annot_df <- annot_df[order(annot_df[group]), , drop = FALSE]
+    mat <- mat[, rownames(annot_df)]
+    show_cols <- FALSE
+  }
+
+  annot_cols <- map2(annotations,
+                     col_palettes,
+                     function(x, cp){
+                       to_map <- annot_df[[x]]
+                       if(is.numeric(to_map)){
+                         res <- circlize::colorRamp2(seq(min(to_map, na.rm = TRUE),
+                                        max(to_map, na.rm = TRUE),
+                                        length = length(default_continuous_pal_fxn)),
+                                    default_continuous_pal_fxn)
+
+                       } else {
+                       vals <- to_map %>%
+                         unique() %>%
+                         sort()
+                       res <- cp[1:length(vals)]
+                       names(res) <- vals
+                       }
+                       res
+                       })
+
+  names(annot_cols) <- annotations
+
+  if(slot == "scale.data"){
+    mat[mat > max_disp] <- max_disp
+    mat[mat < -max_disp] <- -max_disp
+  }
+  ha <- HeatmapAnnotation(df = annot_df,
+                          col = annot_cols)
+
+  hmat <- do.call(
+    function(...){Heatmap(mat,
+                  top_annotation = ha,
+                  show_column_names = show_cols,
+
+      ...)},
+    hmap_options)
+
+  hmat
+
+}
+
+
+
