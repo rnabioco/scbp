@@ -1218,6 +1218,53 @@ add_features <- function(so,
   so
 }
 
+#' Downsample seurat object to the same number of cells per ident
+#' @param so seurat object
+#' @param group grouping variable
+#' @param n_cells # of desired cells, if null then downsample to minimum # of cells per group
+#' @param seed integer for setting seed. if set to NULL then no seed will be set
+#' @export
+downsample_cells <- function(so, group, n_cells = NULL, seed = 42) {
+
+  in_metadata(so, group)
+
+  if(is.null(n_cells)){
+    n_cells <- min(table(so@meta.data[[group]]), na.rm = TRUE)
+  }
+
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
+
+  to_keep <- get_metadata(so) %>%
+    group_by(!!sym(group)) %>%
+    sample_n(size =  n_cells,
+             replace = FALSE) %>%
+    pull(cell)
+
+  res <- subset(so, cells = to_keep)
+
+  res
+}
+
+#' Check if cols in metadata
+check_in_metadata <- function(so, cols, throw_error = TRUE){
+  mdata_cols <- colnames(so@meta.data)
+  in_mdata <- cols %in% mdata_cols
+  if(!all(in_mdata)){
+    missing_cols <- paste(cols[!in_mdata], "column is not found in meta.data")
+    msg <- paste(missing_cols, collapse = "\n")
+    if(throw_error){
+      stop(msg, call. = FALSE)
+    }
+    return(FALSE)
+  }
+  TRUE
+}
+
+
+
+
 
 
 

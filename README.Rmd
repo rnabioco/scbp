@@ -9,7 +9,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  fig.align = "center",
+  out.width = "75%"
 )
 ```
 
@@ -18,7 +19,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-scbp is boilerplate code for single cell analyses. Mostly thin wrappers on seurat functions. 
+scbp is a collection of utility functions for single cell analyses. Mostly plotting and thin wrapper functions extending `Seurat` utilities.
 
 ## Installation
 
@@ -51,7 +52,38 @@ Wrappers for common projections:
 `plot_tsne()`
 `plot_harmony()`
 
+Generate heatmaps with annotations for `meta.data` variables (or plot average per group).
 
+```{r}
+genes <- VariableFeatures(so)
+
+plot_heatmap(so, 
+             features = genes,
+             group = "RNA_snn_res.1",
+             annotations = c("nCount_RNA", "letter.idents"),
+             average = FALSE)
+```
+
+
+
+```{r}
+genes <- VariableFeatures(so)
+
+plot_heatmap(so, 
+             features = genes,
+             group = "RNA_snn_res.1",
+             annotations = c("nCount_RNA", "letter.idents"),
+             average = TRUE)
+```
+
+Make violin plots
+
+```{r}
+ plot_violins(so, 
+              group = "RNA_snn_res.1", 
+              features = VariableFeatures(so)[1:10],
+              split_by = "groups")
+```
 
 ### Summarizing functions
 

@@ -7,8 +7,8 @@
 
 <!-- badges: end -->
 
-scbp is boilerplate code for single cell analyses. Mostly thin wrappers
-on seurat functions.
+scbp is a collection of utility functions for single cell analyses.
+Mostly plotting and thin wrapper functions extending `Seurat` utilities.
 
 ## Installation
 
@@ -28,29 +28,70 @@ plot_tsne(so, c("groups", "CST3"))
 #> [[1]]
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-example-1.png" width="75%" style="display: block; margin: auto;" />
 
     #> 
     #> [[2]]
 
-<img src="man/figures/README-example-2.png" width="100%" />
+<img src="man/figures/README-example-2.png" width="75%" style="display: block; margin: auto;" />
 
 ``` r
 plot_tsne(so, c("groups", "CST3"), group = "letter.idents")
 #> [[1]]
 ```
 
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-2-1.png" width="75%" style="display: block; margin: auto;" />
 
     #> 
     #> [[2]]
 
-<img src="man/figures/README-unnamed-chunk-2-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-2-2.png" width="75%" style="display: block; margin: auto;" />
 
 Wrappers for common projections:
 
 `plot_feature()` `plot_umap()` `plot_pca()` `plot_tsne()`
 `plot_harmony()`
+
+Generate heatmaps with annotations for `meta.data` variables (or plot
+average per group).
+
+``` r
+genes <- VariableFeatures(so)
+
+plot_heatmap(so, 
+             features = genes,
+             group = "RNA_snn_res.1",
+             annotations = c("nCount_RNA", "letter.idents"),
+             average = FALSE)
+```
+
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="75%" style="display: block; margin: auto;" />
+
+``` r
+genes <- VariableFeatures(so)
+
+plot_heatmap(so, 
+             features = genes,
+             group = "RNA_snn_res.1",
+             annotations = c("nCount_RNA", "letter.idents"),
+             average = TRUE)
+#> Finished averaging RNA for cluster 0
+#> Finished averaging RNA for cluster 1
+#> Finished averaging RNA for cluster 2
+```
+
+<img src="man/figures/README-unnamed-chunk-4-1.png" width="75%" style="display: block; margin: auto;" />
+
+Make violin plots
+
+``` r
+ plot_violins(so, 
+              group = "RNA_snn_res.1", 
+              features = VariableFeatures(so)[1:10],
+              split_by = "groups")
+```
+
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="75%" style="display: block; margin: auto;" />
 
 ### Summarizing functions
 
@@ -77,7 +118,7 @@ get_metadata(so)
 plot_cell_proportions(so, "RNA_snn_res.1", "letter.idents")
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="75%" style="display: block; margin: auto;" />
 
 ``` r
 so <- calc_diversity(so,
@@ -87,7 +128,7 @@ so <- calc_diversity(so,
 plot_tsne(so, "entropy")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="75%" style="display: block; margin: auto;" />
 
 ## UCSC cellbrowser utils
 

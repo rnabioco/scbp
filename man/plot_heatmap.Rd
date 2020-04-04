@@ -43,6 +43,8 @@ variable supplied.}
 
 \item{hmap_options}{named list of options that are passed to ComplexHeatmap::Heatmap}
 
+\item{normalize_cell_counts}{if TRUE, downsample cell counts to minimum cell count per group}
+
 \item{default_continuous_pal}{default continuous color palette, defaults to viridis::inferno(256)}
 }
 \description{

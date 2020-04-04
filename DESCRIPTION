@@ -7,7 +7,7 @@ Authors@R: c(
       email = 'kent.riemondy@ucdenver.edu',
       comment = c(ORCID = '0000-0003-0750-1273'))
     )
-Maintainer: The package maintainer <yourself@somewhere.net>
+Maintainer: The package maintainer <kent.riemondy@ucdenver.edu>
 Description: Lightweight wrappers to customize various plotting routines and
     analysis methods. 
 License: MIT
@@ -34,6 +34,10 @@ Imports:
     fgsea,
     DropletUtils,
     BUSpaRse,
+    ComplexHeatmap,
+    S4Vectors,
+    circlize,
+    viridis,
     rmarkdown
 Suggests:
     data.table

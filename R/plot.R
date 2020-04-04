@@ -1,6 +1,3 @@
-ggplot2::theme_set(cowplot::theme_cowplot())
-
-
 #' Plot cells in reduced dimensionality 2D space
 #'
 #' @description Cells can be colored by gene or feature in meta.data dataframe
@@ -394,6 +391,20 @@ plot_violin <- function(df, .x, .y,
   p
 }
 
+#' Make summary violin plots
+#' @param seurat_obj seurat object
+#' @param group x axis grouping variable
+#' @param features features to plot
+#' @param split_by additional metadata columns to split violins per group
+#' @param .size violin size
+#' @param .width violin width
+#' @param .scale violin scaling parameter
+#' @param .alpha violin alpha
+#' @param cols color palette
+#' @param rotate_x_text flip x and y
+#' @param arrange_by_fill not sure
+#' @param order_by_input maintain order of features supplied
+#'
 #' @export
 plot_violins <- function(seurat_obj, group, features,
                          split_by = NULL,
@@ -592,6 +603,7 @@ plot_cell_proportions <- function(obj,
 #'@param annotations additional meta.data columns to add as column annotations
 #'supplied as a character vector, defaults to display just group
 #'@param average if TRUE, return average values per group rather than display all cells
+#'@param normalize_cell_counts if TRUE, downsample cell counts to minimum cell count per group
 #'@param slot data slot to retrive values defaults to scale.data
 #'@param max_disp max/min value to display (2.5), only applied for scale.data
 #'@param col_palettes list of alternative palettes to use for each annotation + group
@@ -633,6 +645,7 @@ plot_heatmap <- function(obj,
   Idents(obj) <- group
   assay <- DefaultAssay(obj)
   annotations <- union(group, annotations)
+  check_in_metadata(obj, annotations)
 
   if(is.null(col_palettes)){
     col_palettes <- map(seq_along(annotations), ~scbp::discrete_palette_default)
