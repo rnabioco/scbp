@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![R build
+status](https://github.com/rnabioco/scbp/workflows/R-CMD-check/badge.svg)](https://github.com/rnabioco/scbp/actions)
 <!-- badges: end -->
 
 scbp is a collection of utility functions for single cell analyses.
