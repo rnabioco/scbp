@@ -74,7 +74,8 @@ jobs:
                                  'S4Vectors',
                                  'BUSpaRse',
                                  'ComplexHeatmap',
-                                 'circlize'))
+                                 'circlize',
+                                 'multtest'))
         shell: Rscript {0}
 
       - name: Check
