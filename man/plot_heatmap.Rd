@@ -15,9 +15,7 @@ plot_heatmap(
   col_palettes = NULL,
   default_discrete_pal = discrete_palette_default,
   default_continuous_pal_fxn = viridis::inferno(256),
-  hmap_options = list(name = "Log Normalized\\nAverage Z-scores", col =
-    viridis::viridis(256), cluster_rows = FALSE, cluster_columns = FALSE, row_names_side =
-    "left", column_names_side = "top", column_names_rot = 0)
+  hmap_options = NULL
 )
 }
 \arguments{

@@ -633,14 +633,7 @@ plot_heatmap <- function(obj,
                          col_palettes = NULL,
                          default_discrete_pal = discrete_palette_default,
                          default_continuous_pal_fxn = viridis::inferno(256),
-                         hmap_options = list(
-                           name = "Log Normalized\nAverage Z-scores",
-                           col = viridis::viridis(256),
-                           cluster_rows = FALSE,
-                           cluster_columns = FALSE,
-                           row_names_side = "left",
-                           column_names_side = "top",
-                           column_names_rot = 0)) {
+                         hmap_options = NULL) {
 
   Idents(obj) <- group
   assay <- DefaultAssay(obj)
@@ -659,9 +652,20 @@ plot_heatmap <- function(obj,
                              slot = slot,
                              features = unique(features))[[assay]][features, ] %>%
       as.matrix()
+
+    numeric_cols <- annotations[which(sapply(annotations,
+                                             function(x){
+                                               is.numeric(obj@meta.data[[x]])
+                                               }))]
+
+    numeric_cols <- setdiff(numeric_cols, group)
+    discrete_cols <- setdiff(annotations, c(numeric_cols, group))
+
     annot_df <- obj@meta.data[, annotations, drop = FALSE] %>%
       group_by(!!sym(group)) %>%
-      summarize_all(~first(.)) %>%
+      mutate_at(numeric_cols, mean, na.rm = TRUE) %>%
+      mutate_at(discrete_cols, first) %>%
+      unique() %>%
       as.data.frame()
     show_cols <- TRUE
   } else {
@@ -702,13 +706,29 @@ plot_heatmap <- function(obj,
   ha <- HeatmapAnnotation(df = annot_df,
                           col = annot_cols)
 
-  hmat <- do.call(
-    function(...){Heatmap(mat,
-                  top_annotation = ha,
-                  show_column_names = show_cols,
+  hmap_option_defaults <- list(
+    name = "Log Normalized\nAverage Z-scores",
+    col = viridis::viridis(256),
+    cluster_rows = FALSE,
+    cluster_columns = FALSE,
+    row_names_side = "left",
+    column_names_side = "top",
+    column_names_rot = 0,
+    show_column_names = show_cols)
 
-      ...)},
+  if(is.null(hmap_options)){
+    hmap_options <- hmap_option_defaults
+  } else {
+    opts_to_add <- hmap_option_defaults[which(!names(hmap_option_defaults) %in% names(hmap_options))]
+    hmap_options <- c(hmap_options, opts_to_add)
+  }
+
+  hmap_options$top_annotation <- ha
+
+  hmat <- do.call(
+    function(...){Heatmap(mat, ...)},
     hmap_options)
+
 
   hmat
 
