@@ -639,18 +639,20 @@ plot_heatmap <- function(obj,
   assay <- DefaultAssay(obj)
   annotations <- union(group, annotations)
   check_in_metadata(obj, annotations)
+  features <- unique(features)
 
   if(is.null(col_palettes)){
     col_palettes <- map(seq_along(annotations), ~scbp::discrete_palette_default)
   } else {
-    stopifnot(length(col_palettes) == length(annotations),
-              "col_palettes should be a list of col_palettes the same length as the # of annotations")
+     if(!(length(col_palettes) == length(annotations))){
+      stop("col_palettes should be a list of col_palettes the same length as the # of annotations")
+     }
   }
 
   if(average){
     mat <- AverageExpression(obj,
                              slot = slot,
-                             features = unique(features))[[assay]][features, ] %>%
+                             features = features)[[assay]][features, ] %>%
       as.matrix()
 
     numeric_cols <- annotations[which(sapply(annotations,

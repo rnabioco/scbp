@@ -16,5 +16,5 @@ write_avg_expr(sobj, col, path, assay = "RNA")
 \item{assay}{assay to write out, defaults to RNA}
 }
 \description{
-Write average expression matrix to a file
+Defaults to using write_tsv unless path ends with .csv or .csv.gz
 }

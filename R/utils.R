@@ -234,6 +234,8 @@ write_markers_xlsx <- function(mrkr_list,
 }
 
 #' Write average expression matrix to a file
+#'
+#' Defaults to using write_tsv unless path ends with .csv or .csv.gz
 #' @param sobj seurat object
 #' @param col metadata column for averaging
 #' @param path output path
@@ -244,7 +246,13 @@ write_avg_expr <- function(sobj, col, path, assay = "RNA") {
   expr <- AverageExpression(sobj, return.seurat = FALSE)
   expr <- as.data.frame(expr[[assay]]) %>%
     tibble::rownames_to_column("gene")
-  write_tsv(expr, path)
+
+  if(any(stringr::str_detect(path, c(".csv$", ".csv.gz$")))){
+    writer_fxn <- write_csv
+  } else {
+    writer_fxn <- write_tsv
+  }
+  writer_fxn(expr, path)
 }
 
 #' Extract out reduced dimensions and cell metadata to tibble
