@@ -711,16 +711,20 @@ make_cellbrowser <- function(so,
 #' @param outdir output path
 #' @param cbBuild_path path to cbBuild binary
 #' @param command print command run
+#' @param verbose if TRUE print debug messages
 #' @export
 build_cellbrowser <- function(dataset_paths,
                               outdir = "cellbrowser_build",
                               cbBuild_path = "/miniconda3/envs/py37/bin/cbBuild",
-                              command = TRUE){
+                              command = TRUE,
+                              debug = FALSE){
 
   cb_args <- unlist(map(dataset_paths, ~c("-i", .x)))
   out_args <- c("-o", outdir)
   cb_args <- c(cb_args, out_args)
-
+  if(debug){
+    c(cb_args, "-d")
+  }
   system2(cbBuild_path,
           args = cb_args)
 

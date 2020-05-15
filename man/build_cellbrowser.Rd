@@ -8,7 +8,8 @@ build_cellbrowser(
   dataset_paths,
   outdir = "cellbrowser_build",
   cbBuild_path = "/miniconda3/envs/py37/bin/cbBuild",
-  command = TRUE
+  command = TRUE,
+  debug = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ build_cellbrowser(
 \item{cbBuild_path}{path to cbBuild binary}
 
 \item{command}{print command run}
+
+\item{verbose}{if TRUE print debug messages}
 }
 \description{
 Build cellbrowser
