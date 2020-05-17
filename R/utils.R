@@ -719,14 +719,25 @@ build_cellbrowser <- function(dataset_paths,
                               command = TRUE,
                               debug = FALSE){
 
+
+
   cb_args <- unlist(map(dataset_paths, ~c("-i", .x)))
   out_args <- c("-o", outdir)
   cb_args <- c(cb_args, out_args)
   if(debug){
-    c(cb_args, "-d")
+    cb_args <- c(cb_args, "-d")
   }
   system2(cbBuild_path,
           args = cb_args)
+
+  # copy summary.html
+  purrr::walk(dataset_paths, ~{
+    summary_html <- file.path(dirname(.x), "summary.html")
+    if(file.exists(summary_html)){
+      outfn <- file.path(outdir, basename(dirname(.x)), "summary.html")
+      file.copy(summary_html, outfn, overwrite = TRUE)
+    }
+  })
 
   if(command){
     message(paste(c(cbBuild_path, cb_args), collapse = " "))
