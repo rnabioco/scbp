@@ -75,7 +75,8 @@ jobs:
                                  'BUSpaRse',
                                  'ComplexHeatmap',
                                  'circlize',
-                                 'multtest'))
+                                 'multtest',
+                                 'edgeR'))
         shell: Rscript {0}
 
       - name: Check
