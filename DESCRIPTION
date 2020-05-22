@@ -39,7 +39,8 @@ Imports:
     S4Vectors,
     circlize,
     viridis,
-    rmarkdown
+    rmarkdown,
+    edgeR
 Suggests:
     data.table
 RoxygenNote: 7.1.0
