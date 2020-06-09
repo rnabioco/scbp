@@ -45,6 +45,13 @@ plot_tsne(so, c("groups", "CST3"))
 plot_tsne(so, c("groups", "CST3"), group = "letter.idents")
 ```
 
+
+```{r}
+plot_tsne(so, "RNA_snn_res.1",
+          label_text = TRUE, # show group labels 
+          minimal_theme = TRUE, # no axes or legend
+          .cols = palette_OkabeIto) # use other colors
+```
 Wrappers for common projections:
 
 `plot_feature()`

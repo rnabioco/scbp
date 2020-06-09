@@ -49,6 +49,14 @@ plot_tsne(so, c("groups", "CST3"), group = "letter.idents")
 
 <img src="man/figures/README-unnamed-chunk-2-2.png" width="75%" style="display: block; margin: auto;" />
 
+``` r
+plot_tsne(so, "RNA_snn_res.1",
+          label_text = TRUE, # show group labels 
+          minimal_theme = TRUE, # no axes or legend
+          .cols = palette_OkabeIto) # use other colors
+```
+
+<img src="man/figures/README-unnamed-chunk-3-1.png" width="75%" style="display: block; margin: auto;" />
 Wrappers for common projections:
 
 `plot_feature()` `plot_umap()` `plot_pca()` `plot_tsne()`
@@ -67,7 +75,7 @@ plot_heatmap(so,
              average = FALSE)
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-4-1.png" width="75%" style="display: block; margin: auto;" />
 
 ``` r
 genes <- VariableFeatures(so)
@@ -82,7 +90,7 @@ plot_heatmap(so,
 #> Finished averaging RNA for cluster 2
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="75%" style="display: block; margin: auto;" />
 
 Make violin plots
 
@@ -93,7 +101,7 @@ Make violin plots
               split_by = "groups")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="75%" style="display: block; margin: auto;" />
 
 ### Summarizing functions
 
@@ -120,7 +128,7 @@ get_metadata(so)
 plot_cell_proportions(so, "RNA_snn_res.1", "letter.idents")
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="75%" style="display: block; margin: auto;" />
 
 ``` r
 so <- calc_diversity(so,
@@ -130,7 +138,7 @@ so <- calc_diversity(so,
 plot_tsne(so, "entropy")
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="75%" style="display: block; margin: auto;" />
 
 ## UCSC cellbrowser utils
 
