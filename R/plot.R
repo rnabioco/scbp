@@ -54,7 +54,8 @@ plot_feature <- function(seurat_obj,
                          sorted = c("by_feature", "none", "random"),
                          transform = "identity",
                          na_col = "grey",
-                         seed = 42){
+                         seed = 42,
+                         label_repulsion = 1){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -174,7 +175,7 @@ plot_feature <- function(seurat_obj,
                                      color = feature),
                           size = label_size,
                           segment.colour = NA,
-                          force = 1,
+                          force = label_repulsion,
                           seed = seed)
       } else {
         p <- p +
@@ -185,7 +186,7 @@ plot_feature <- function(seurat_obj,
                           size = label_size,
                           color = label_color[1],
                           segment.colour = NA,
-                          force = 1,
+                          force = label_repulsion,
                           seed = seed)
       }
 

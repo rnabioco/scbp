@@ -32,7 +32,8 @@ plot_feature(
   sorted = c("by_feature", "none", "random"),
   transform = "identity",
   na_col = "grey",
-  seed = 42
+  seed = 42,
+  label_repulsion = 1
 )
 
 plot_umap(seurat_obj, ...)

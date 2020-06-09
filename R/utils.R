@@ -27,7 +27,7 @@ tableu_classic_palatte <-
 
 #'@export
 discrete_palette_default <- c(tableu_classic_palatte,
-                             brewer.pal(8, "Dark2"),
+                             RColorBrewer::brewer.pal(8, "Dark2"),
                              palette_OkabeIto)
 
 #' @export
