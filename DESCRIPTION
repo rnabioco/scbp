@@ -37,6 +37,8 @@ Imports:
     BUSpaRse,
     ComplexHeatmap,
     S4Vectors,
+    RANN,
+    ggrepel,
     circlize,
     viridis,
     rmarkdown,

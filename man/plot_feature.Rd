@@ -17,7 +17,7 @@ plot_feature(
   pt_alpha = 1,
   label_text = FALSE,
   label_size = 6,
-  label_color = "black",
+  label_color = NULL,
   .cols = NULL,
   cell_filter = NULL,
   palette_type = "cloupe",
@@ -31,7 +31,8 @@ plot_feature(
   dims = c(1, 2),
   sorted = c("by_feature", "none", "random"),
   transform = "identity",
-  na_col = "grey"
+  na_col = "grey",
+  seed = 42
 )
 
 plot_umap(seurat_obj, ...)
@@ -67,7 +68,7 @@ Must have a column named cell that contains matching colnames in seurat_obj@data
 
 \item{label_size}{size of label text}
 
-\item{label_color}{color of label text}
+\item{label_color}{color of label text, defaults to same colors as feature}
 
 \item{.cols}{vector of colors to use for plot.}
 
@@ -100,6 +101,8 @@ is sorted by_feature (one of "by_feature", "none", "random")}
 to no transformation (i.e. "identity") See ?continous_scale for available transforms.}
 
 \item{na_col}{Color for NA values (default = "grey")}
+
+\item{seed}{seed for repeling labels if label_text is true, defaults to 42, set to NA for random behavior}
 
 \item{\dots}{Additional parameters to pass to plot_feature}
 

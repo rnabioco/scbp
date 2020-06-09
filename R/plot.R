@@ -10,7 +10,7 @@
 #' @param pt_alpha alpha value for points plotted by geom_point
 #' @param label_text if TRUE display feature labels on plot
 #' @param label_size size of label text
-#' @param label_color color of label text
+#' @param label_color color of label text, defaults to same colors as feature
 #' @param .cols vector of colors to use for plot.
 #' @param cell_filter character vector of cell names to include in plot
 #' @param palette_type color palette type to use (either viridis, brewer, or cloupe)
@@ -30,6 +30,7 @@
 #' @param transform adrgument o be passed to scale_color_gradientn for continuous data. defaults
 #' to no transformation (i.e. "identity") See ?continous_scale for available transforms.
 #' @param na_col Color for NA values (default = "grey")
+#' @param seed seed for repeling labels if label_text is true, defaults to 42, set to NA for random behavior
 #' @export
 plot_feature <- function(seurat_obj,
                          feature = NULL,
@@ -38,7 +39,7 @@ plot_feature <- function(seurat_obj,
                          pt_alpha = 1,
                          label_text = FALSE,
                          label_size = 6,
-                         label_color = "black",
+                         label_color = NULL,
                          .cols = NULL,
                          cell_filter = NULL,
                          palette_type = "cloupe",
@@ -52,7 +53,8 @@ plot_feature <- function(seurat_obj,
                          dims = c(1, 2),
                          sorted = c("by_feature", "none", "random"),
                          transform = "identity",
-                         na_col = "grey"){
+                         na_col = "grey",
+                         seed = 42){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -151,14 +153,42 @@ plot_feature <- function(seurat_obj,
         group_by_at(vars(one_of(feature))) %>%
         summarize(med_dim_1 = median(get(xcol)),
                   med_dim_2 = median(get(ycol)))
+      embed_med_dat <- embed_dat %>%
+        group_by_at(vars(one_of(feature))) %>%
+        mutate(median_x = median(get(xcol)),
+               median_y = median(get(ycol))) %>%
+        mutate(new_id = ifelse(closest_to_point(data.frame(.data[[xcol]],
+                                                           .data[[ycol]]),
+                                                c(unique(median_x),
+                                                  unique(median_y))),
+                               as.character(!!sym(feature)),
+                               ""))
 
-      p <- p +
-        geom_text(data = embed_mean_dat,
-                  aes_string(x = "med_dim_1",
-                             y = "med_dim_2",
-                             label = feature),
-                  size = label_size,
-                  color = label_color)
+      # use same colors as each feature
+      if(is.null(label_color)){
+        p <- p +
+          ggrepel::geom_text_repel(data = embed_med_dat,
+                          aes_string(x = "median_x",
+                                     y = "median_y",
+                                     label = "new_id",
+                                     color = feature),
+                          size = label_size,
+                          segment.colour = NA,
+                          force = 1,
+                          seed = seed)
+      } else {
+        p <- p +
+          ggrepel::geom_text_repel(data = embed_med_dat,
+                          aes_string(x = "median_x",
+                                     y = "median_y",
+                                     label = "new_id"),
+                          size = label_size,
+                          color = label_color[1],
+                          segment.colour = NA,
+                          force = 1,
+                          seed = seed)
+      }
+
     } else {
       warning("label_text not compatible with continuous features")
     }
@@ -736,5 +766,17 @@ plot_heatmap <- function(obj,
 
 }
 
+#' Get data  closest to a point
+#' @returns Logical vector for each row in input matrix, TRUE if closest point
+#' @importFrom RANN nn2
+closest_to_point <- function(mat, point){
 
+  if(length(point) != ncol(mat)){
+    stop("incompatible dimensions for finding closest row to point")
+  }
+
+  idx <- RANN::nn2(mat, matrix(point, nrow = 1),k = 1)$nn.idx[1, 1]
+  is_closest <- 1:nrow(mat) == idx
+  is_closest
+}
 
