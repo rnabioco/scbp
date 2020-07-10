@@ -32,8 +32,7 @@ plot_feature(
   sorted = c("by_feature", "none", "random"),
   transform = "identity",
   na_col = "grey",
-  ggrepel_opts = list(seed = 42, force = 1, max.overlaps = ncol(seurat_obj),
-    segment.color = NA, size = label_size)
+  ggrepel_opts = list()
 )
 
 plot_umap(seurat_obj, ...)

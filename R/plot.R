@@ -54,14 +54,7 @@ plot_feature <- function(seurat_obj,
                          sorted = c("by_feature", "none", "random"),
                          transform = "identity",
                          na_col = "grey",
-                         ggrepel_opts = list(
-                           seed = 42,
-                           force = 1,
-                           max.overlaps = ncol(seurat_obj),
-                           segment.color = NA,
-                           size = label_size
-                           )
-                         ){
+                         ggrepel_opts = list()){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -155,6 +148,16 @@ plot_feature <- function(seurat_obj,
   }
 
   if (label_text) {
+    ggrepel_def_opts <- list(
+      seed = 42,
+      force = 1,
+      max.overlaps = ncol(seurat_obj),
+      segment.color = NA,
+      size = label_size
+    )
+
+    ggrepel_opts <- modifyList(ggrepel_def_opts, ggrepel_opts)
+
     if(discrete) {
       embed_med_dat <- embed_dat %>%
         group_by_at(vars(one_of(feature))) %>%
