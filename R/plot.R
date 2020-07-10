@@ -30,7 +30,7 @@
 #' @param transform adrgument o be passed to scale_color_gradientn for continuous data. defaults
 #' to no transformation (i.e. "identity") See ?continous_scale for available transforms.
 #' @param na_col Color for NA values (default = "grey")
-#' @param seed seed for repeling labels if label_text is true, defaults to 42, set to NA for random behavior
+#' @param ggrepel_opts named list of options to pass to ggrepel geom_text_repel.
 #' @export
 plot_feature <- function(seurat_obj,
                          feature = NULL,
@@ -54,8 +54,14 @@ plot_feature <- function(seurat_obj,
                          sorted = c("by_feature", "none", "random"),
                          transform = "identity",
                          na_col = "grey",
-                         seed = 42,
-                         label_repulsion = 1){
+                         ggrepel_opts = list(
+                           seed = 42,
+                           force = 1,
+                           max.overlaps = ncol(seurat_obj),
+                           segment.color = NA,
+                           size = label_size
+                           )
+                         ){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -150,10 +156,6 @@ plot_feature <- function(seurat_obj,
 
   if (label_text) {
     if(discrete) {
-      embed_mean_dat <- embed_dat %>%
-        group_by_at(vars(one_of(feature))) %>%
-        summarize(med_dim_1 = median(get(xcol)),
-                  med_dim_2 = median(get(ycol)))
       embed_med_dat <- embed_dat %>%
         group_by_at(vars(one_of(feature))) %>%
         mutate(median_x = median(get(xcol)),
@@ -168,26 +170,22 @@ plot_feature <- function(seurat_obj,
       # use same colors as each feature
       if(is.null(label_color)){
         p <- p +
-          ggrepel::geom_text_repel(data = embed_med_dat,
+          do.call(ggrepel::geom_text_repel,
+                  c(list(data = embed_med_dat,
                           aes_string(x = "median_x",
                                      y = "median_y",
                                      label = "new_id",
-                                     color = feature),
-                          size = label_size,
-                          segment.colour = NA,
-                          force = label_repulsion,
-                          seed = seed)
+                                     color = feature)),
+                    ggrepel_opts))
       } else {
+        ggrepel_opts$color <- label_color[1]
         p <- p +
-          ggrepel::geom_text_repel(data = embed_med_dat,
-                          aes_string(x = "median_x",
-                                     y = "median_y",
-                                     label = "new_id"),
-                          size = label_size,
-                          color = label_color[1],
-                          segment.colour = NA,
-                          force = label_repulsion,
-                          seed = seed)
+          do.call(ggrepel::geom_text_repel,
+                  c(list(data = embed_med_dat,
+                         aes_string(x = "median_x",
+                                    y = "median_y",
+                                    label = "new_id")),
+                    ggrepel_opts))
       }
 
     } else {

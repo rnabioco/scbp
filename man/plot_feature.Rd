@@ -32,8 +32,8 @@ plot_feature(
   sorted = c("by_feature", "none", "random"),
   transform = "identity",
   na_col = "grey",
-  seed = 42,
-  label_repulsion = 1
+  ggrepel_opts = list(seed = 42, force = 1, max.overlaps = ncol(seurat_obj),
+    segment.color = NA, size = label_size)
 )
 
 plot_umap(seurat_obj, ...)
@@ -103,7 +103,7 @@ to no transformation (i.e. "identity") See ?continous_scale for available transf
 
 \item{na_col}{Color for NA values (default = "grey")}
 
-\item{seed}{seed for repeling labels if label_text is true, defaults to 42, set to NA for random behavior}
+\item{ggrepel_opts}{named list of options to pass to ggrepel geom_text_repel.}
 
 \item{\dots}{Additional parameters to pass to plot_feature}
 
