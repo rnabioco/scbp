@@ -4,7 +4,7 @@
 \alias{get_clonotypes}
 \title{get clonotype information per cell}
 \usage{
-get_clonotypes(vdj_dir, prefix = "")
+get_clonotypes(vdj_dir, prefix = "", strip_number_id = FALSE)
 }
 \arguments{
 \item{vdj_dir}{path to clonotypes file}

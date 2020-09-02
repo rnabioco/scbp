@@ -483,8 +483,9 @@ set_shared_orthologs <- function(so1, so2, orthologs,
 #' @param assays character vector of additional assay expression matrices to export.
 #'  If supplied then the data matrix with be concatenated via rowbinding to the default assay matrix.
 #'  If a named character vector is supplied the name will be prefixed to the rows (i.e features).
-#' @param description named list with title and description fields to be rendered
-#' into summary.html. Title will default to the project title.
+#' @param description named list dataset descriptions. Will be written to desc.conf file.
+#' Title will default to the project title. See UCSC cellbrowser documentation for
+#' allowable entries.
 #' @param config named list with custom entries to add to cellbrowser.conf file.
 #' e.g. (config = list(priority = 1, radius = 5, alpha = 0.3)). See UCSC cellbrowser documentation for
 #' allowable entries.
@@ -524,6 +525,7 @@ make_cellbrowser <- function(so,
   col_file <- file.path(outdir, paste0(project, "_colorMap.csv"))
   cbmarker_file <- file.path(outdir, "markers", paste0(project, "_markers.tsv"))
   cb_config_file <- file.path(outdir, project, "cellbrowser.conf")
+  desc_file <- file.path(outdir, project, "desc.conf")
 
   if(overwrite_cb_config){
     unlink(cb_config_file)
@@ -545,10 +547,6 @@ make_cellbrowser <- function(so,
   if(is.null(names(column_list))){
     names(column_list) <- column_list
   }
-
-  column_list <- c(column_list,
-                  structure(c("nCount_RNA", "nFeature_RNA"),
-                            names = c("nCount_RNA", "nFeature_RNA")))
 
   so@meta.data <- so@meta.data[, column_list]
   colnames(so@meta.data) <- names(column_list)
@@ -606,9 +604,9 @@ make_cellbrowser <- function(so,
   names(cols) <- colnames(so@meta.data)
 
   # resave marker file in custom format
-  # not that the third column will sorted in rev order
+  # not that the third column will be sorted in rev order
   # only if it has these strings
-  #["p_val", "p-val", "p.val", "pval", "fdr"]
+  # ["p_val", "p-val", "p.val", "pval", "fdr"]
   # otherwise ascending order
   # see https://github.com/maximilianh/cellBrowser/blob/c643946d160c9729833a47d1bc44cd49fface6f6/src/cbPyLib/cellbrowser/cellbrowser.py#L2260
   if(!is.null(marker_file)){
@@ -654,13 +652,13 @@ make_cellbrowser <- function(so,
   DefaultAssay(so) <- default_assay
 
   do.call(function(...) {ExportToCellbrowserFast(so,
-                                             dir = file.path(outdir, project),
-                                             dataset.name = project,
-                                             reductions = embeddings,
-                                             markers.file = cbmarker_file,
-                                             cluster.field = ident,
-                                             skip.expr.matrix = skip_expr_matrix,
-                                             ...)},
+                                                 dir = file.path(outdir, project),
+                                                 dataset.name = project,
+                                                 reductions = embeddings,
+                                                 markers.file = cbmarker_file,
+                                                 cluster.field = ident,
+                                                 skip.expr.matrix = skip_expr_matrix,
+                                                 ...)},
           as.list(cols))
 
   # add color line to config
@@ -684,25 +682,23 @@ make_cellbrowser <- function(so,
   }
 
   if(!is.null(description)){
+
+    if(!is.list(description) || is.null(names(description))){
+      stop("description must be a named list")
+    }
+
     if(!"title" %in% names(description)){
       description$title <- project
     }
 
-    message("scbp:: Writing summary.html to ", file.path(outdir, project))
-    md <- glue(summary_html_format,
-               title = description$title,
-               description = description$description)
-
-    f <- tempfile(fileext = ".md")
-    on.exit(unlink(f))
-    readr::write_lines(md, f)
-    rmarkdown::render(f,
-                      output_format = "html_document",
-                      output_file = "summary.html",
-                      output_dir = file.path(outdir, project),
-                      output_options = list(pandoc_args = "--quiet"),
-                      quiet = TRUE)
-    on.exit(unlink(f))
+    desc_params <- purrr::imap(description,
+                                 function(value, key){
+                                   res <- glue::glue('\n{key}="{value}"')
+                                   message("scbp:: Adding ", res ," to desc.conf")
+                                   res
+                                 }) %>%
+      unlist()
+    readr::write_lines(desc_params, desc_file)
   }
 }
 
@@ -750,16 +746,18 @@ build_cellbrowser <- function(dataset_paths,
 #' @param vdj_dir path to clonotypes file
 #' @param prefix prefix to add to cell_id
 #' @export
-get_clonotypes <- function(vdj_dir, prefix = "") {
+get_clonotypes <- function(vdj_dir, prefix = "", strip_number_id = FALSE) {
   ctypes <- read_csv(file.path(vdj_dir, "filtered_contig_annotations.csv"))
 
   ctypes <- mutate(ctypes,
-                   cell_id = str_remove(barcode, "-1$"),
-                   cell_id = str_c(prefix, cell_id)) %>%
+                   cell_id = str_c(prefix, barcode)) %>%
     select(cell_id,
            raw_clonotype_id) %>%
     unique()
 
+  if (strip_number_id){
+    ctypes <- mutate(ctypes, cell_id = str_remove(cell_id, "-[0-9]$"))
+  }
   consensus_ctypes <- read_csv(file.path(vdj_dir,
                                          "clonotypes.csv"))
 
@@ -785,9 +783,18 @@ add_clonotypes <- function(sobj, vdj_dirs, prefixes = NULL) {
       stop("prefixes must be the same length as the # of vdj_dirs")
     }
   }
-  out <- map2_dfr(vdj_dirs, prefixes, get_clonotypes)
 
   cells <- tibble(cell_id = Cells(sobj))
+
+  if(all(stringr::str_detect(cells, "-[0-9]$"))) {
+    strip_cell_suffix <- TRUE
+  } else {
+    strip_cell_suffix <- FALSE
+  }
+
+  out <- map2_dfr(vdj_dirs, prefixes,
+                  get_clonotypes,
+                  strip_number_id = strip_cell_suffix)
 
   res <- left_join(cells, out, by = "cell_id") %>%
     as.data.frame() %>%
@@ -865,9 +872,8 @@ ExportToCellbrowserFast <- function(
   use_readr <- Seurat:::PackageCheck("readr", error = FALSE)
   use_datatable <- Seurat:::PackageCheck("data.table", error = FALSE)
   if (is.null(x = vars)) {
-    vars <- c("nCount_RNA", "nFeature_RNA")
     if (length(x = levels(x = Seurat::Idents(object = object))) > 1) {
-      vars <- c(vars, cluster.field)
+      vars <- c(cluster.field)
       names(x = vars) <- c("", "", "ident")
     }
   }

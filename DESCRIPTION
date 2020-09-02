@@ -38,11 +38,13 @@ Imports:
     ComplexHeatmap,
     S4Vectors,
     RANN,
-    ggrepel,
+    ggrepel (>= 0.9.0),
     circlize,
     viridis,
     rmarkdown,
     edgeR
 Suggests:
     data.table
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
+Remotes: 
+    slowkow/ggrepel

@@ -151,7 +151,7 @@ plot_feature <- function(seurat_obj,
     ggrepel_def_opts <- list(
       seed = 42,
       force = 1,
-      max.overlaps = ncol(seurat_obj),
+      max.overlaps = 1e6,
       segment.color = NA,
       size = label_size
     )

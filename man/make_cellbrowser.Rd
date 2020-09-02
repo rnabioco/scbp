@@ -69,8 +69,9 @@ If a named character vector is supplied the name will be prefixed to the rows (i
 
 \item{cellbrowser_dir}{directory where cellbrowser binary lives}
 
-\item{description}{named list with title and description fields to be rendered
-into summary.html. Title will default to the project title.}
+\item{description}{named list dataset descriptions. Will be written to desc.conf file.
+Title will default to the project title. See UCSC cellbrowser documentation for
+allowable entries.}
 
 \item{config}{named list with custom entries to add to cellbrowser.conf file.
 e.g. (config = list(priority = 1, radius = 5, alpha = 0.3)). See UCSC cellbrowser documentation for
