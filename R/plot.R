@@ -19,11 +19,13 @@
 #' @param max_y maximum feature value to set scale to. Defaults to max of the feature
 #' @param legend_title string to supply for title for the legend
 #' @param embedding dimensionality reduction to extract from seurat_obj. Can be any
-#' dr method present in seurat_obj@dr (e.g. umap, pca, tsne). defaults to tsne
+#' reduction present in seurat_obj@reductions (e.g. umap, pca, tsne). defaults to tsne
 #' @param show_negative By default the legend value for continuous features will be clipped at zero.
 #' If false, then the minumum value for the plotted feature will be used.
 #' @param minimal_theme plot bare minimum
-#' @param group grouping varible to split plots via faceting
+#' @param group grouping variable to split plots via faceting
+#' @param group_rows number of rows of plots when faceting by group (defaults to NULL)
+#' @param group_cols  number of cols of plots when faceting by group
 #' @param dims which dims to plot from embedding, defaults to first and second, i.e. c(1,2).
 #' @param sorted should the plotting be determined by sorting in ascending order? Default
 #' is sorted by_feature (one of "by_feature", "none", "random")
@@ -50,6 +52,8 @@ plot_feature <- function(seurat_obj,
                          show_negative = FALSE,
                          minimal_theme = FALSE,
                          group = NULL,
+                         group_rows = NULL,
+                         group_cols = NULL,
                          dims = c(1, 2),
                          sorted = c("by_feature", "none", "random"),
                          transform = "identity",
@@ -277,7 +281,9 @@ plot_feature <- function(seurat_obj,
 
   if(!is.null(group)){
     p <- p +
-      facet_wrap(as.formula(paste0("~", group))) +
+      facet_wrap(as.formula(paste0("~", group)),
+                 nrow = group_rows,
+                 ncol = group_cols) +
       theme(strip.background = element_rect(fill = "white"))
   }
   p
@@ -674,7 +680,7 @@ plot_heatmap <- function(obj,
   features <- unique(features)
 
   if(is.null(col_palettes)){
-    col_palettes <- map(seq_along(annotations), ~scbp::discrete_palette_default)
+    col_palettes <- map(seq_along(annotations), ~default_discrete_pal)
   } else {
      if(!(length(col_palettes) == length(annotations))){
       stop("col_palettes should be a list of col_palettes the same length as the # of annotations")
@@ -684,6 +690,7 @@ plot_heatmap <- function(obj,
   if(average){
     mat <- AverageExpression(obj,
                              slot = slot,
+                             assays = assay,
                              features = features)[[assay]][features, ] %>%
       as.matrix()
 
@@ -699,7 +706,8 @@ plot_heatmap <- function(obj,
       group_by(!!sym(group)) %>%
       mutate_at(numeric_cols, mean, na.rm = TRUE) %>%
       mutate_at(discrete_cols, first) %>%
-      unique() %>%
+      distinct() %>%
+      arrange(!!sym(group)) %>%
       as.data.frame()
     show_cols <- TRUE
   } else {

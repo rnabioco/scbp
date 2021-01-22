@@ -226,7 +226,7 @@ write_markers_xlsx <- function(mrkr_list,
 
   xcel_out <- c(readme_sheet,  xcel_out)
 
-  # santize for spreadsheet tab names
+  # sanitize for spreadsheet tab names
   names(xcel_out) <- str_replace_all(names(xcel_out), "[[:punct:]]", " ")
   openxlsx::write.xlsx(xcel_out,
                        path)
@@ -1087,6 +1087,7 @@ ExportToCellbrowserFast <- function(
 #' @param fdr fdr cutoff for cell calling
 #' @param cell_bc list of character vectors of cell ids to keep in output,
 #' if supplied cell calling will be skipped. Order must match paths argument
+#' @param genes genes to use for cell calling, useful for exclude mito and ribogenes
 #' @param ... additional arguments passed onto emptyDrops
 #'
 #' @return A list of named lists with slots:
@@ -1099,6 +1100,7 @@ ExportToCellbrowserFast <- function(
 preprocess_bus <- function(paths,
                            fdr = 0.01,
                            cell_bc = NULL,
+                           genes = NULL,
                            ...){
 
   res <- list()
@@ -1114,6 +1116,11 @@ preprocess_bus <- function(paths,
     mat <- BUSpaRse::read_count_output(mtx_path,
                                        name = mtx_prefix,
                                        tcc = FALSE)
+    og_mat <- mat
+    if(!is.null(genes)){
+      mat <- mat[genes, , drop = FALSE]
+    }
+
     if(is.null(cell_bc)){
       barcode_ranks <- DropletUtils::barcodeRanks(mat)
 
@@ -1127,7 +1134,7 @@ preprocess_bus <- function(paths,
       empty_drops <- data.frame()
     }
 
-    cell_mat <- mat[, cell_bcs, drop = FALSE]
+    cell_mat <- og_mat[, cell_bcs, drop = FALSE]
 
     prefix <- names(paths[i])
 

@@ -28,6 +28,8 @@ plot_feature(
   show_negative = FALSE,
   minimal_theme = FALSE,
   group = NULL,
+  group_rows = NULL,
+  group_cols = NULL,
   dims = c(1, 2),
   sorted = c("by_feature", "none", "random"),
   transform = "identity",
@@ -91,6 +93,10 @@ If false, then the minumum value for the plotted feature will be used.}
 \item{minimal_theme}{plot bare minimum}
 
 \item{group}{grouping varible to split plots}
+
+\item{group_rows}{number of rows of plots when faceting by group (defaults to NULL)}
+
+\item{group_cols}{number of cols of plots when faceting by group}
 
 \item{dims}{which dims to plot from embedding, defaults to first and second, i.e. c(1,2).}
 

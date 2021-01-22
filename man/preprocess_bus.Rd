@@ -4,7 +4,7 @@
 \alias{preprocess_bus}
 \title{Preprocessing for Bustools output}
 \usage{
-preprocess_bus(paths, fdr = 0.01, cell_bc = NULL, ...)
+preprocess_bus(paths, fdr = 0.01, cell_bc = NULL, genes = NULL, ...)
 }
 \arguments{
 \item{paths}{paths to directories with mtx files. If a
@@ -15,6 +15,8 @@ prefixed with "name_".}
 
 \item{cell_bc}{list of character vectors of cell ids to keep in output,
 if supplied cell calling will be skipped. Order must match paths argument}
+
+\item{genes}{genes to use for cell calling, useful for exclude mito and ribogenes}
 
 \item{...}{additional arguments passed onto emptyDrops}
 }
