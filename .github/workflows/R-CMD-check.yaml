@@ -60,6 +60,11 @@ jobs:
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
           sudo -s eval "$sysreqs"
 
+      - name: Install XQuartz for ComplexHeatmap
+        if: runner.os == 'macOS'
+        run: |
+          brew cask install xquartz
+
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
@@ -73,7 +78,8 @@ jobs:
                                  'ComplexHeatmap',
                                  'circlize',
                                  'multtest',
-                                 'edgeR'))
+                                 'edgeR',
+                                 'rtracklayer'))
         shell: Rscript {0}
 
       - name: Check
