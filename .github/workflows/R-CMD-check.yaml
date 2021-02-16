@@ -63,7 +63,7 @@ jobs:
       - name: Install XQuartz for ComplexHeatmap
         if: runner.os == 'macOS'
         run: |
-          brew cask install xquartz
+          brew install xquartz
 
       - name: Install dependencies
         run: |
