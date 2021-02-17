@@ -67,6 +67,7 @@ optionally uses Readr instead of base R for writing to disk
 }
 \examples{
 \dontrun{
+pbmc_small <- get_example_data()
 ExportToCellbrowserFast(object = pbmc_small, dataset.name = "PBMC", dir = "out")
 }
 

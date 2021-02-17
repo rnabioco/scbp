@@ -49,10 +49,10 @@ variable supplied.}
 Plot heatmap per cluster/cell-type
 }
 \examples{
-
-plot_heatmap(Seurat::pbmc_small,
-             features = rownames(Seurat::pbmc_small@assays$RNA@scale.data),
+pbmc_small <- get_example_data()
+plot_heatmap(pbmc_small,
+             features = rownames(pbmc_small@assays$RNA@scale.data),
              group = "letter.idents",
-             annotations = colnames(Seurat::pbmc_small@meta.data))
+             annotations = colnames(pbmc_small@meta.data))
 
 }

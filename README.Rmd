@@ -35,7 +35,7 @@ remotes::install_github("rnabioco/scbp")
 library(scbp)
 library(Seurat)
 
-so <- Seurat::pbmc_small
+so <- get_example_data()
 
 plot_tsne(so, c("groups", "CST3"))
 ```

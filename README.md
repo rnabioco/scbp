@@ -23,8 +23,9 @@ remotes::install_github("rnabioco/scbp")
 ``` r
 library(scbp)
 library(Seurat)
+#> Attaching SeuratObject
 
-so <- Seurat::pbmc_small
+so <- get_example_data()
 
 plot_tsne(so, c("groups", "CST3"))
 #> [[1]]
@@ -85,9 +86,6 @@ plot_heatmap(so,
              group = "RNA_snn_res.1",
              annotations = c("nCount_RNA", "letter.idents"),
              average = TRUE)
-#> Finished averaging RNA for cluster 0
-#> Finished averaging RNA for cluster 1
-#> Finished averaging RNA for cluster 2
 ```
 
 <img src="man/figures/README-unnamed-chunk-5-1.png" width="75%" style="display: block; margin: auto;" />
@@ -107,6 +105,9 @@ Make violin plots
 
 ``` r
 get_metadata(so)
+#> Registered S3 method overwritten by 'cli':
+#>   method     from    
+#>   print.boxx spatstat
 #> # A tibble: 80 x 12
 #>    cell  orig.ident nCount_RNA nFeature_RNA RNA_snn_res.0.8 letter.idents groups
 #>    <chr> <fct>           <dbl>        <int> <fct>           <fct>         <chr> 

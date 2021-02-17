@@ -850,6 +850,7 @@ add_clonotypes <- function(sobj, vdj_dirs, prefixes = NULL) {
 #'
 #' @examples
 #' \dontrun{
+#' pbmc_small <- get_example_data()
 #' ExportToCellbrowserFast(object = pbmc_small, dataset.name = "PBMC", dir = "out")
 #' }
 #'
@@ -1299,8 +1300,10 @@ check_in_metadata <- function(so, cols, throw_error = TRUE){
 }
 
 
-
-
-
-
-
+#' Example data
+#' @export
+get_example_data <- function(){
+  readRDS(system.file("extdata",
+                      "seurat_pbmc_small_v4.0.0.rds",
+                      package = "scbp", mustWork = TRUE))
+}
