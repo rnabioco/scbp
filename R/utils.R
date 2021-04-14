@@ -26,9 +26,7 @@ tableu_classic_palatte <-
     "#9edae5")
 
 #'@export
-discrete_palette_default <- c(tableu_classic_palatte,
-                             RColorBrewer::brewer.pal(8, "Dark2"),
-                             palette_OkabeIto)
+discrete_palette_default <- c(tableu_classic_palatte)
 
 #' @export
 ilovehue_pal <- c(
@@ -96,7 +94,6 @@ get_distinct_cols <- function(vec, seed = 42) {
   }
   unlist(vals)
 }
-
 
 #' @export
 set_xlsx_class <- function(df, col, xlsx_class){

@@ -45,7 +45,8 @@ Imports:
     circlize,
     viridis,
     rmarkdown,
-    edgeR
+    edgeR,
+    grDevices
 Suggests:
     data.table
 RoxygenNote: 7.1.1

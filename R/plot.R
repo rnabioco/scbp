@@ -220,6 +220,8 @@ plot_feature <- function(seurat_obj,
     return(p)
   }
 
+
+
   ## handle colors
   if (is.null(.cols) && !discrete){
     if (palette_type == "viridis") {
@@ -252,6 +254,9 @@ plot_feature <- function(seurat_obj,
                                    na.value = na_col)
   } else {
 
+    ## get length of unique features
+    n_features <- length(unique(embed_dat[[color_aes_str]]))
+
     if(!is.null(.cols)) {
       # use colors provided
       p <- p + scale_color_manual(
@@ -259,6 +264,16 @@ plot_feature <- function(seurat_obj,
         name = legend_title,
         na.value = na_col
       )
+    } else if (n_features > length(discrete_palette_default)){
+      color_fun <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(12, "Paired"))
+      larger_palette <- color_fun(n_features)
+
+      p <- p + scale_color_manual(
+        values = larger_palette,
+        name = legend_title,
+        na.value = na_col
+      )
+
     } else {
       p <- p + scale_color_manual(
         values = discrete_palette_default,
