@@ -169,10 +169,18 @@ marker_type <- function(df){
   if(is.character(df)){
     df <- suppressMessages(read_tsv(df))
   }
-  seurat_cols <- c("cluster",
+  seurat_v3_cols <- c("cluster",
                    "gene",
                    "p_val",
                    "avg_logFC",
+                   "pct.1",
+                   "pct.2",
+                   "p_val_adj")
+
+  seurat_v4_cols <- c("cluster",
+                   "gene",
+                   "p_val",
+                   "avg_log2FC",
                    "pct.1",
                    "pct.2",
                    "p_val_adj")
@@ -187,7 +195,7 @@ marker_type <- function(df){
                    "padj",
                    "pct_in",
                    "pct_out")
-  if(all(colnames(df) %in% seurat_cols)){
+  if(all(colnames(df) %in% seurat_v3_cols) || all(colnames(df) %in% seurat_v4_cols)){
     marker_type <- "Seurat"
   } else if (all(colnames(df) %in% presto_cols)) {
     marker_type <- "presto"
@@ -572,6 +580,10 @@ make_cellbrowser <- function(so,
 
   col_res <- map(col_map,
        function(x) {
+         if(length(x) > length(col_palette)){
+           color_fun <- grDevices::colorRampPalette(col_palette)
+           col_palette <- color_fun(length(x))
+         }
          cols = col_palette[1:length(x)]
          structure(cols, names = x)
        })
@@ -609,7 +621,7 @@ make_cellbrowser <- function(so,
   if(!is.null(marker_file)){
     if(marker_type(marker_file) == "Seurat"){
       mkrs <- read_tsv(marker_file) %>%
-        select(cluster, gene, fdr = p_val_adj, avg_logFC, everything(), -p_val)
+        select(cluster, gene, fdr = p_val_adj, contains("avg_log"), everything(), -p_val)
     } else {
       mkrs <- read_tsv(marker_file) %>%
         select(cluster = group,
