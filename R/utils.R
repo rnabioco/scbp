@@ -1088,6 +1088,86 @@ ExportToCellbrowserFast <- function(
   }
 }
 
+#' Preprocessing for Alevin output
+#'
+#' @param paths paths to salmon output directory with alevin/quants_mat.gz files. If a
+#' named vector is supplied then the cellbarcode will be
+#' prefixed with "name_".
+#' @param fdr fdr cutoff for cell calling
+#' @param cell_bc list of character vectors of cell ids to keep in output,
+#' if supplied cell calling will be skipped. Order must match paths argument
+#' @param genes genes to use for cell calling, useful for exclude mito and ribogenes
+#' @param ... additional arguments passed onto emptyDrops
+#'
+#' @return A list of named lists with slots:
+#'   mtx a sparseMatrix with only cell associated barcodes
+#'   empty_drops a data.frame with information from emptyDrops
+#'   barcode_ranks a data.frame with information from barcodeRanks
+#' @importFrom tximport tximport
+#' @importFrom DropletUtils emptyDrops barcodeRanks
+#' @export
+preprocess_alevin <- function(paths,
+                           fdr = 0.01,
+                           cell_bc = NULL,
+                           genes = NULL,
+                           ...){
+
+  res <- list()
+
+  for (i in seq_along(paths)){
+
+    mtx_path <- file.path(paths[i], "alevin", "quants_mat.gz")
+    message("loading matrix: ", mtx_path)
+
+    mat <- tximport::tximport(mtx_path, type = 'alevin')$counts
+
+    og_mat <- mat
+    if(!is.null(genes)){
+      mat <- mat[genes, , drop = FALSE]
+    }
+
+    if(is.null(cell_bc)){
+      barcode_ranks <- DropletUtils::barcodeRanks(mat)
+
+      empty_drops <- DropletUtils::emptyDrops(mat, ...)
+
+      is_cell <- empty_drops$FDR <= fdr
+      cell_bcs <- rownames(empty_drops)[which(is_cell)]
+    } else {
+      cell_bcs <- cell_bc[[i]]
+      barcode_ranks <- data.frame()
+      empty_drops <- data.frame()
+    }
+
+    cell_mat <- og_mat[, cell_bcs, drop = FALSE]
+
+    prefix <- names(paths[i])
+
+    if(!is.null(prefix)){
+      colnames(cell_mat) <- stringr::str_c(
+        prefix,
+        "_",
+        colnames(cell_mat))
+
+      if(is.null(cell_bc)){
+        rownames(empty_drops) <- stringr::str_c(
+          prefix,
+          "_",
+          rownames(empty_drops))
+
+        rownames(barcode_ranks) <- stringr::str_c(
+          prefix,
+          "_",
+          rownames(barcode_ranks))
+      }
+    }
+    res[[i]] <- list(mtx = cell_mat,
+                     barcode_ranks = barcode_ranks,
+                     empty_drops = empty_drops)
+  }
+
+  res
+}
 
 #' Preprocessing for Bustools output
 #'

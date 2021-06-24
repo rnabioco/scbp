@@ -33,6 +33,8 @@
 #' to no transformation (i.e. "identity") See ?continous_scale for available transforms.
 #' @param na_col Color for NA values (default = "grey")
 #' @param ggrepel_opts named list of options to pass to ggrepel geom_text_repel.
+#' @param highlight individual values to highlight from a metadata annotation selected for plotting.
+#' other values will be set to `na_col`.
 #' @export
 plot_feature <- function(seurat_obj,
                          feature = NULL,
@@ -58,7 +60,8 @@ plot_feature <- function(seurat_obj,
                          sorted = c("by_feature", "none", "random"),
                          transform = "identity",
                          na_col = "grey",
-                         ggrepel_opts = list()){
+                         ggrepel_opts = list(),
+                         highlight = NULL){
 
   if(length(feature) > 1){
     args <- as.list(match.call(expand.dots = TRUE)[-1])
@@ -117,6 +120,11 @@ plot_feature <- function(seurat_obj,
   color_aes_str <- feature
 
   color_aes_str_q <- quo(color_aes_str)
+
+  if(!is.null(highlight) & meta_data_col) {
+    to_drop <- which(!embed_dat[[color_aes_str]] %in% highlight)
+    embed_dat[[color_aes_str]][to_drop] <- "others"
+  }
 
   if(sorted[1] == "by_feature"){
     embed_dat <- embed_dat %>% arrange_at(.vars = color_aes_str)
@@ -220,8 +228,6 @@ plot_feature <- function(seurat_obj,
     return(p)
   }
 
-
-
   ## handle colors
   if (is.null(.cols) && !discrete){
     if (palette_type == "viridis") {
@@ -256,31 +262,23 @@ plot_feature <- function(seurat_obj,
 
     ## get length of unique features
     n_features <- length(unique(embed_dat[[color_aes_str]]))
-
     if(!is.null(.cols)) {
       # use colors provided
-      p <- p + scale_color_manual(
-        values = .cols,
-        name = legend_title,
-        na.value = na_col
-      )
+      d_col_palette <- .cols
     } else if (n_features > length(discrete_palette_default)){
       color_fun <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(12, "Paired"))
-      larger_palette <- color_fun(n_features)
-
-      p <- p + scale_color_manual(
-        values = larger_palette,
-        name = legend_title,
-        na.value = na_col
-      )
-
+      d_col_palette <- color_fun(n_features)
     } else {
-      p <- p + scale_color_manual(
-        values = discrete_palette_default,
-        name = legend_title,
-        na.value = na_col
-      )
+      d_col_palette <- discrete_palette_default
     }
+    if(!is.null(highlight)) {
+      d_col_palette[n_features] <- na_col
+    }
+    p <- p + scale_color_manual(
+      values = d_col_palette,
+      name = legend_title,
+      na.value = na_col
+    )
   }
 
   # drop axes, labels, and legend, just plot feature title and projection

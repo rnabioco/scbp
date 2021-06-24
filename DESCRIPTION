@@ -46,7 +46,8 @@ Imports:
     viridis,
     rmarkdown,
     edgeR,
-    grDevices
+    grDevices,
+    tximport
 Suggests:
     data.table
 RoxygenNote: 7.1.1

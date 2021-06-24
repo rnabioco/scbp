@@ -34,7 +34,8 @@ plot_feature(
   sorted = c("by_feature", "none", "random"),
   transform = "identity",
   na_col = "grey",
-  ggrepel_opts = list()
+  ggrepel_opts = list(),
+  highlight = NULL
 )
 
 plot_umap(seurat_obj, ...)
@@ -109,6 +110,9 @@ to no transformation (i.e. "identity") See ?continous_scale for available transf
 \item{na_col}{Color for NA values (default = "grey")}
 
 \item{ggrepel_opts}{named list of options to pass to ggrepel geom_text_repel.}
+
+\item{highlight}{individual values to highlight from a metadata annotation selected for plotting.
+other values will be set to `na_col`.}
 
 \item{\dots}{Additional parameters to pass to plot_feature}
 
