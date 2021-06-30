@@ -692,6 +692,11 @@ plot_heatmap <- function(obj,
   check_in_metadata(obj, annotations)
   features <- unique(features)
 
+  features_in_meta <- FALSE
+  if(check_in_metadata(obj, features, throw_error = FALSE)){
+    features_in_meta <- TRUE
+  }
+
   if(is.null(col_palettes)){
     col_palettes <- map(seq_along(annotations), ~default_discrete_pal)
   } else {
@@ -701,11 +706,22 @@ plot_heatmap <- function(obj,
   }
 
   if(average){
-    mat <- AverageExpression(obj,
-                             slot = slot,
-                             assays = assay,
-                             features = features)[[assay]][features, ] %>%
-      as.matrix()
+    if(!features_in_meta){
+      mat <- AverageExpression(obj,
+                               slot = slot,
+                               assays = assay,
+                               features = features)[[assay]][features, ] %>%
+        as.matrix()
+    } else {
+      mat <- so@meta.data[, names(midbrain_gene_signatures), drop = FALSE] %>%
+        as.matrix() %>%
+        t()
+      cell_ids <- split(colnames(mat), so$refined_cell_type)
+      out <- lapply(cell_ids, function(x){
+        Matrix::rowMeans(mat[, x, drop = FALSE])
+        })
+      mat <- do.call(cbind, out)
+    }
 
     numeric_cols <- annotations[which(sapply(annotations,
                                              function(x){
@@ -724,8 +740,14 @@ plot_heatmap <- function(obj,
       as.data.frame()
     show_cols <- TRUE
   } else {
-    mat <- GetAssayData(obj, slot = slot)[features, ] %>%
-      as.matrix()
+    if(!features_in_meta){
+      mat <- GetAssayData(obj, slot = slot)[features, ] %>%
+        as.matrix()
+    } else {
+      mat <- so@meta.data[, names(midbrain_gene_signatures), drop = FALSE] %>%
+        as.matrix() %>%
+        t()
+    }
     annot_df <- obj@meta.data[, annotations, drop = FALSE]
     annot_df <- annot_df[order(annot_df[group]), , drop = FALSE]
     mat <- mat[, rownames(annot_df)]

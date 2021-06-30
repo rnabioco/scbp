@@ -35,7 +35,6 @@ Imports:
     tibble,
     dplyr,
     purrr,
-    fgsea,
     DropletUtils,
     BUSpaRse,
     ComplexHeatmap,
@@ -47,9 +46,8 @@ Imports:
     rmarkdown,
     edgeR,
     grDevices,
-    tximport
+    tximport,
+    Matrix
 Suggests:
     data.table
 RoxygenNote: 7.1.1
-Remotes: 
-    slowkow/ggrepel

@@ -232,9 +232,11 @@ write_markers_xlsx <- function(mrkr_list,
   xcel_out <- c(readme_sheet,  xcel_out)
 
   # sanitize for spreadsheet tab names
-  names(xcel_out) <- str_replace_all(names(xcel_out), "[[:punct:]]", " ")
+  names(xcel_out) <- str_replace_all(names(xcel_out), "[[:punct:]]", " ") %>%
+    str_sub(1, 31)
   openxlsx::write.xlsx(xcel_out,
-                       path)
+                       path,
+                       overwrite = TRUE)
 
 }
 
@@ -336,60 +338,6 @@ get_cell_count_matrix <- function(obj, row_var, col_var){
 
 #'
 
-
-#' Run fGSEA on gene lists
-#' @export
-run_fgsea <- function(ranked_gene_list,
-                      species = c("human", "mouse"),
-                      database = reactome.db::reactome.db,
-                      convert_ids = TRUE,
-                      min_size=15,
-                      max_size=500,
-                      n_perm=10000,
-                      ...){
-
-  stopifnot(requireNamespace("reactome.db"))
-  stopifnot(requireNamespace("fgsea"))
-  stopifnot(requireNamespace("AnnotationDbi"))
-  stopifnot(requireNamespace("org.Hs.eg.db"))
-  stopifnot(requireNamespace("org.Mm.eg.db"))
-
-  if(convert_ids){
-    message("converting gene symbols to entrez ids")
-    if(species[1] == "human") {
-      gs_db <- org.Hs.eg.db
-    } else if (species[1] == "mouse") {
-      gs_db <- org.Mm.eg.db
-    } else {
-      gs_db <- species
-    }
-
-    e_ids <- mapIds(gs_db, names(ranked_gene_list), 'ENTREZID', 'SYMBOL')
-    e_ids <- e_ids[names(ranked_gene_list)]
-
-    new_gene_list <- ranked_gene_list
-    names(new_gene_list) <- e_ids
-    new_gene_list <- new_gene_list[!is.na(names(new_gene_list))]
-
-  } else {
-    new_gene_list <- gene_list
-  }
-
-  pathways <- fgsea::reactomePathways(names(new_gene_list))
-
-  res <- list()
-  res$fgsea <- fgsea(pathways = pathways,
-                    stats = new_gene_list,
-               minSize=min_size,
-               maxSize=max_size,
-               nperm=n_perm,
-                ...)
-
-  res$pathways <- pathways
-  res$ids <- new_gene_list
-  res
-
-}
 
 is_discrete <- function(x) {
   is.character(x) | is.logical(x) | is.factor(x)
