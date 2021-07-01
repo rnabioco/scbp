@@ -70,7 +70,7 @@ jobs:
           remotes::install_cran("rcmdcheck")
 
           remotes::install_cran("BiocManager")
-          BiocManager::install(c('fgsea',
+          BiocManager::install(c('tximport',
                                  'DropletUtils',
                                  'S4Vectors',
                                  'BUSpaRse',
