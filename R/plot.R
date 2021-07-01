@@ -713,10 +713,10 @@ plot_heatmap <- function(obj,
                                features = features)[[assay]][features, ] %>%
         as.matrix()
     } else {
-      mat <- so@meta.data[, names(midbrain_gene_signatures), drop = FALSE] %>%
+      mat <- obj@meta.data[, features, drop = FALSE] %>%
         as.matrix() %>%
         t()
-      cell_ids <- split(colnames(mat), so$refined_cell_type)
+      cell_ids <- split(colnames(mat), obj@meta.data[[group]])
       out <- lapply(cell_ids, function(x){
         Matrix::rowMeans(mat[, x, drop = FALSE])
         })
@@ -744,7 +744,7 @@ plot_heatmap <- function(obj,
       mat <- GetAssayData(obj, slot = slot)[features, ] %>%
         as.matrix()
     } else {
-      mat <- so@meta.data[, names(midbrain_gene_signatures), drop = FALSE] %>%
+      mat <- obj@meta.data[, features, drop = FALSE] %>%
         as.matrix() %>%
         t()
     }
