@@ -9,6 +9,8 @@ plot_cell_proportions(
   sample_id = "orig.ident",
   group_id = "coarse_clusters",
   facet_by = NULL,
+  summary_boxplot = FALSE,
+  return_data = FALSE,
   cols = discrete_palette_default
 )
 }
@@ -18,6 +20,15 @@ plot_cell_proportions(
 \item{sample_id}{column name containing the per sample id}
 
 \item{group_id}{column name with cluster id}
+
+\item{facet_by}{column name to facet by}
+
+\item{summary_boxplot}{if TRUE, summarize data with `facet_by` variable using
+jittered boxplot}
+
+\item{return_data}{if TRUE return cell count data with plot as a list}
+
+\item{cols}{colors}
 }
 \description{
 Plot cell proportions across each sample

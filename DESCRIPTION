@@ -19,6 +19,7 @@ Imports:
     cowplot,
     RColorBrewer,
     ggplot2,
+    ggbeeswarm,
     stringr,
     tidyr,
     Seurat (>= 4.0.0),

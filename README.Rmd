@@ -100,10 +100,25 @@ get_metadata(so)
 ```
 
 ```{r}
-plot_cell_proportions(so, "RNA_snn_res.1", "letter.idents")
+plot_cell_proportions(so, 
+                      "groups",
+                      "RNA_snn_res.1")
 ```
 
+```{r}
+plot_cell_proportions(so, 
+                      "groups",
+                      "RNA_snn_res.1", 
+                      facet_by = "letter.idents")
+```
 
+```{r}
+plot_cell_proportions(so, 
+                      "groups",
+                      "RNA_snn_res.1",
+                      facet_by = "letter.idents",
+                      summary_boxplot = TRUE)
+```
 
 ```{r}
 so <- calc_diversity(so,

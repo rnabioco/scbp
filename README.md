@@ -74,6 +74,7 @@ plot_heatmap(so,
              group = "RNA_snn_res.1",
              annotations = c("nCount_RNA", "letter.idents"),
              average = FALSE)
+#> Warning in xtfrm.data.frame(x): cannot xtfrm data frames
 ```
 
 <img src="man/figures/README-unnamed-chunk-4-1.png" width="75%" style="display: block; margin: auto;" />
@@ -106,9 +107,9 @@ Make violin plots
 ``` r
 get_metadata(so)
 #> Registered S3 method overwritten by 'cli':
-#>   method     from    
-#>   print.boxx spatstat
-#> # A tibble: 80 x 12
+#>   method     from         
+#>   print.boxx spatstat.geom
+#> # A tibble: 80 × 12
 #>    cell  orig.ident nCount_RNA nFeature_RNA RNA_snn_res.0.8 letter.idents groups
 #>    <chr> <fct>           <dbl>        <int> <fct>           <fct>         <chr> 
 #>  1 ATGC… SeuratPro…         70           47 0               A             g2    
@@ -126,10 +127,31 @@ get_metadata(so)
 ```
 
 ``` r
-plot_cell_proportions(so, "RNA_snn_res.1", "letter.idents")
+plot_cell_proportions(so, 
+                      "groups",
+                      "RNA_snn_res.1")
 ```
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" width="75%" style="display: block; margin: auto;" />
+
+``` r
+plot_cell_proportions(so, 
+                      "groups",
+                      "RNA_snn_res.1", 
+                      facet_by = "letter.idents")
+```
+
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="75%" style="display: block; margin: auto;" />
+
+``` r
+plot_cell_proportions(so, 
+                      "groups",
+                      "RNA_snn_res.1",
+                      facet_by = "letter.idents",
+                      summary_boxplot = TRUE)
+```
+
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="75%" style="display: block; margin: auto;" />
 
 ``` r
 so <- calc_diversity(so,
@@ -139,7 +161,7 @@ so <- calc_diversity(so,
 plot_tsne(so, "entropy")
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="75%" style="display: block; margin: auto;" />
 
 ## UCSC cellbrowser utils
 
@@ -147,7 +169,6 @@ Wrappers around UCSC cellbrowser generation routines. Uses data.table
 fwrite to speed up generating files.
 
 ``` r
-
 make_cellbrowser(so, 
                  column_list = c("orig.ident", "groups"),
                  project = "pbmcs",

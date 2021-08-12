@@ -576,12 +576,19 @@ plot_bc <- function(empty_drops,
 #' @param obj Seurat object
 #' @param sample_id column name containing the per sample id
 #' @param group_id column name with cluster id
-#'
+#' @param facet_by column name to facet by
+#' @param summary_boxplot if TRUE, summarize data with `facet_by` variable using
+#' jittered boxplot
+#' @param return_data if TRUE return cell count data with plot as a list
+#' @param cols colors
+#' @importFrom ggbeeswarm geom_beeswarm
 #' @export
 plot_cell_proportions <- function(obj,
                            sample_id = "orig.ident",
                            group_id = "coarse_clusters",
                            facet_by = NULL,
+                           summary_boxplot = FALSE,
+                           return_data = FALSE,
                            cols = discrete_palette_default){
 
   mdata <- get_metadata(obj, embedding = NULL)
@@ -620,29 +627,58 @@ plot_cell_proportions <- function(obj,
       unique()
   }
 
-  p <- ggplot(per_patient,
-              aes_string(sample_id, "prop_cell_type")) +
-    geom_col(aes_string(fill = group_id)) +
-    labs(x = "Sample ID",
-         y = "Proportion of each cell type")
+  if(summary_boxplot){
+    if(is.null(facet_by)){
+      stop("facet_by argument required for summary_boxplot")
+    }
 
-  if(!is.null(cols)){
-    p <- p + scale_fill_manual(values = cols)
+    p <- ggplot(per_patient, aes_string(group_id, "prop_cell_type")) +
+      geom_boxplot(aes_string(fill = facet_by),
+                   size = 1,
+                   alpha = 0.6,
+                   coef = 1e5) +
+      geom_beeswarm(aes_string(color = facet_by),
+                    dodge.width=1,
+                    size = 0.75)  +
+      scale_fill_manual(values = cols) +
+      scale_color_manual(values = cols) +
+      labs(x ="",
+           y = "Proportion of cells",
+           color = "",
+           fill = "") +
+      theme(axis.text.x = element_text(angle = 90,
+                                       hjust = 1,
+                                       vjust = 0.5))
+  } else {
+    p <- ggplot(per_patient,
+                aes_string(sample_id, "prop_cell_type")) +
+      geom_col(aes_string(fill = group_id)) +
+      labs(x = "Sample ID",
+           y = "Proportion of each cell type")+
+      scale_fill_manual(values = cols)
+
+
+
+    if(!is.null(facet_by)){
+      p <- p + facet_grid(as.formula(paste0("~", facet_by)), scales = "free_x", space = "free_x")
+    }
+
+    p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+                   legend.position = "top",
+                   strip.background = element_rect(fill = "white")) +
+      geom_text(data = cell_summary,
+                aes_string(x = sample_id, y = 0.15,
+                           label = "n_cells"),
+                angle = 90)
   }
 
-
-  if(!is.null(facet_by)){
-    p <- p + facet_grid(as.formula(paste0("~", facet_by)), scales = "free_x", space = "free_x")
+  if(return_data){
+    res <- list(data = per_patient,
+                plot = p)
+  } else {
+    res <- p
   }
-
-  p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-          legend.position = "top",
-          strip.background = element_rect(fill = "white")) +
-    geom_text(data = cell_summary,
-              aes_string(x = sample_id, y = 0.15,
-                  label = "n_cells"),
-              angle = 90)
-  p
+  res
 
 }
 
