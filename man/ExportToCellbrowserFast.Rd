@@ -3,7 +3,7 @@
 \name{ExportToCellbrowserFast}
 \alias{ExportToCellbrowserFast}
 \title{Export Seurat object for UCSC cell browser
-optionally uses Readr instead of base R for writing to disk}
+optionally uses Readr or data.table instead of base R for writing to disk}
 \usage{
 ExportToCellbrowserFast(
   object,
@@ -63,7 +63,7 @@ that directory and opens a browser.
 }
 \description{
 Export Seurat object for UCSC cell browser
-optionally uses Readr instead of base R for writing to disk
+optionally uses Readr or data.table instead of base R for writing to disk
 }
 \examples{
 \dontrun{
