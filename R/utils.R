@@ -541,6 +541,8 @@ make_cellbrowser <- function(so,
 
   so@meta.data <- so@meta.data[, column_list]
   colnames(so@meta.data) <- names(column_list)
+
+  so@meta.data[[ident]] <- sanitize_names(so@meta.data[[ident]])
   Idents(so) <- ident
 
   ## Set colors
@@ -619,15 +621,31 @@ make_cellbrowser <- function(so,
                -pval,
                -statistic)
     } else if (mkr_type == "scran") {
-      mkrs <- read_tsv(marker_file) %>%
-        select(cluster = group,
-               gene,
-               fdr = FDR,
-               logFC = summary.logFC,
-               everything())
+      mkrs <- read_tsv(marker_file)
+      if("cluster" %in% colnames(mkrs)){
+        mkrs <- select(mkrs,
+                       cluster,
+                       gene,
+                       fdr = FDR,
+                       logFC = summary.logFC,
+                       everything())
+      } else if ("group" %in% colnames(mkrs)){
+        mkrs <- select(mkrs,
+                       cluster = group,
+                       gene,
+                       fdr = FDR,
+                       logFC = summary.logFC,
+                       everything())
+      } else {
+        stop("cluster or group column not present")
+      }
+
     } else {
       stop("unknown marker file")
     }
+
+    # sanitize cluster names
+    mkrs <- mutate(mkrs, cluster = sanitize_names(cluster))
 
     print(cbmarker_file)
     write_tsv(mkrs, cbmarker_file)
@@ -1408,4 +1426,14 @@ get_example_data <- function(){
   readRDS(system.file("extdata",
                       "seurat_pbmc_small_v4.0.0.rds",
                       package = "scbp", mustWork = TRUE))
+}
+#' Sanitize cluster names
+#'
+#' @export
+sanitize_names <- function(x){
+    str_replace_all(x, " ", "") %>%
+    str_replace_all(fixed("+"), "_") %>%
+    str_replace_all("[^a-zA-Z_0-9+]", "_") %>%
+    str_replace_all("_+$", "") %>%
+    str_replace_all("^_+", "")
 }
