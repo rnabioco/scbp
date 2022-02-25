@@ -165,6 +165,30 @@ presto_marker_description <- function(description = ""){
   ))
 }
 
+#' @export
+scran_marker_description <- function(description = ""){
+  tibble(
+    Columns = c(
+      description,
+      "",
+      "Columns",
+      "gene",
+      "PValue",
+      "FDR",
+      "summary.logFC",
+      "logFC.X"
+    ), Description = c(
+      "",
+      "",
+      "",
+      "gene/feature name",
+      "Pvalue, summarized from pairwise comparisions across all clusters",
+      "adjusted pvalue",
+      "log2-fold-change,  summarized across all clusters",
+      "log2 fold change between current cluster, and indicated cluster "
+    ))
+}
+
 marker_type <- function(df){
   if(is.character(df)){
     df <- suppressMessages(read_tsv(df))
@@ -195,10 +219,15 @@ marker_type <- function(df){
                    "padj",
                    "pct_in",
                    "pct_out")
+
+  scran_cols <- c("p.value", "FDR", "summary.logFC")
+
   if(all(colnames(df) %in% seurat_v3_cols) || all(colnames(df) %in% seurat_v4_cols)){
     marker_type <- "Seurat"
   } else if (all(colnames(df) %in% presto_cols)) {
     marker_type <- "presto"
+  } else if (all(scran_cols %in% colnames(df))) {
+    marker_type <- "scran"
   } else {
     stop("unknown marker file")
   }
@@ -215,12 +244,22 @@ write_markers_xlsx <- function(mrkr_list,
                                path,
                                description_string = "Genes differentially expressed between each cluster and all other cells"){
 
-  if(marker_type(mrkr_list[[1]]) == "Seurat"){
+  mkr_type <- marker_type(mrkr_list[[1]])
+
+  if(mkr_type == "Seurat"){
     readme_sheet <- seurat_marker_description(description_string)
     gene_col <- "gene"
-  } else {
+  } else if (mkr_type == "presto") {
     readme_sheet <- presto_marker_description(description_string)
     gene_col <- "feature"
+  } else if (mkr_type == "scran") {
+    readme_sheet <- scran_marker_description(description_string)
+    gene_col <- "gene"
+    mrkr_list <- map(mrkr_list, ~as.data.frame(.x) %>%
+                     rownames_to_column("gene"))
+
+  } else {
+    stop("unknown marker gene list")
   }
 
   readme_sheet <- list(README = readme_sheet)
@@ -444,7 +483,6 @@ set_shared_orthologs <- function(so1, so2, orthologs,
 #' allowable entries.
 #' @param summary_html_format markdown formatted glue expression for formatting title and description into
 #' summary.html file
-#'
 #' @importFrom glue glue
 #' @importFrom readr write_lines
 #' @importFrom purrr map walk
@@ -503,6 +541,8 @@ make_cellbrowser <- function(so,
 
   so@meta.data <- so@meta.data[, column_list]
   colnames(so@meta.data) <- names(column_list)
+
+  so@meta.data[[ident]] <- sanitize_names(so@meta.data[[ident]])
   Idents(so) <- ident
 
   ## Set colors
@@ -567,10 +607,11 @@ make_cellbrowser <- function(so,
   # otherwise ascending order
   # see https://github.com/maximilianh/cellBrowser/blob/c643946d160c9729833a47d1bc44cd49fface6f6/src/cbPyLib/cellbrowser/cellbrowser.py#L2260
   if(!is.null(marker_file)){
-    if(marker_type(marker_file) == "Seurat"){
+    mkr_type <- marker_type(marker_file)
+    if(mkr_type == "Seurat"){
       mkrs <- read_tsv(marker_file) %>%
         select(cluster, gene, fdr = p_val_adj, contains("avg_log"), everything(), -p_val)
-    } else {
+    } else if (mkr_type == "presto") {
       mkrs <- read_tsv(marker_file) %>%
         select(cluster = group,
                gene = feature,
@@ -579,7 +620,33 @@ make_cellbrowser <- function(so,
                everything(),
                -pval,
                -statistic)
+    } else if (mkr_type == "scran") {
+      mkrs <- read_tsv(marker_file)
+      if("cluster" %in% colnames(mkrs)){
+        mkrs <- select(mkrs,
+                       cluster,
+                       gene,
+                       fdr = FDR,
+                       logFC = summary.logFC,
+                       everything())
+      } else if ("group" %in% colnames(mkrs)){
+        mkrs <- select(mkrs,
+                       cluster = group,
+                       gene,
+                       fdr = FDR,
+                       logFC = summary.logFC,
+                       everything())
+      } else {
+        stop("cluster or group column not present")
+      }
+
+    } else {
+      stop("unknown marker file")
     }
+
+    # sanitize cluster names
+    mkrs <- mutate(mkrs, cluster = sanitize_names(cluster))
+
     print(cbmarker_file)
     write_tsv(mkrs, cbmarker_file)
 
@@ -767,7 +834,7 @@ add_clonotypes <- function(sobj, vdj_dirs, prefixes = NULL) {
 
 
 #' Export Seurat object for UCSC cell browser
-#' optionally uses Readr instead of base R for writing to disk
+#' optionally uses Readr or data.table instead of base R for writing to disk
 #'
 #' @param object Seurat object
 #' @param dir path to directory where to save exported files. These are:
@@ -827,8 +894,8 @@ ExportToCellbrowserFast <- function(
 ) {
   vars <- c(...)
 
-  use_readr <- Seurat:::PackageCheck("readr", error = FALSE)
-  use_datatable <- Seurat:::PackageCheck("data.table", error = FALSE)
+  use_readr <- PackageCheck("readr", error = FALSE)
+  use_datatable <- PackageCheck("data.table", error = FALSE)
   if (is.null(x = vars)) {
     if (length(x = levels(x = Seurat::Idents(object = object))) > 1) {
       vars <- c(cluster.field)
@@ -865,21 +932,18 @@ ExportToCellbrowserFast <- function(
     # Relatively memory inefficient - maybe better to convert to sparse-row and write in a loop, row-by-row?
     df <- as.data.frame(x = as.matrix(x = Seurat::GetAssayData(object = object)))
     df <- data.frame(gene = rownames(x = object), df, check.names = FALSE)
-    gzPath <- file.path(dir, "exprMatrix.tsv.gz")
-
-    message("Writing expression matrix to ", gzPath)
-
+    matrix.path <- file.path(dir, "exprMatrix.tsv.gz")
+    message("Writing expression matrix to ", matrix.path)
     if(!use_readr){
-      z <- gzfile(gzPath, "w")
+      z <- gzfile(matrix.path, "w")
       write.table(x = df, sep = "\t", file = z, quote = FALSE, row.names = FALSE)
       close(con = z)
     } else if (use_datatable) {
-      data.table::fwrite(x = df, file = gzPath,
+      data.table::fwrite(x = df, file = matrix.path,
                          sep = "\t", compress = "gzip")
     } else {
-      readr::write_tsv(x = df, path = gzPath)
+      readr::write_tsv(x = df, path = matrix.path)
     }
-
   }
   # Export cell embeddings
   embeddings.conf <- c()
@@ -1336,6 +1400,25 @@ check_in_metadata <- function(so, cols, throw_error = TRUE){
   TRUE
 }
 
+# Copied from SeuratObject
+PackageCheck <- function(..., error = TRUE) {
+  pkgs <- unlist(x = c(...), use.names = FALSE)
+  package.installed <- vapply(
+    X = pkgs,
+    FUN = requireNamespace,
+    FUN.VALUE = logical(length = 1L),
+    quietly = TRUE
+  )
+  if (error && any(!package.installed)) {
+    stop(
+      "Cannot find the following packages: ",
+      paste(pkgs[!package.installed], collapse = ', '),
+      ". Please install"
+    )
+  }
+  invisible(x = package.installed)
+}
+
 
 #' Example data
 #' @export
@@ -1343,4 +1426,14 @@ get_example_data <- function(){
   readRDS(system.file("extdata",
                       "seurat_pbmc_small_v4.0.0.rds",
                       package = "scbp", mustWork = TRUE))
+}
+#' Sanitize cluster names
+#'
+#' @export
+sanitize_names <- function(x){
+    str_replace_all(x, " ", "") %>%
+    str_replace_all(fixed("+"), "_") %>%
+    str_replace_all("[^a-zA-Z_0-9+]", "_") %>%
+    str_replace_all("_+$", "") %>%
+    str_replace_all("^_+", "")
 }

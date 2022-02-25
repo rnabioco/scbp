@@ -770,7 +770,7 @@ plot_heatmap <- function(obj,
     annot_df <- obj@meta.data[, annotations, drop = FALSE] %>%
       group_by(!!sym(group)) %>%
       mutate_at(numeric_cols, mean, na.rm = TRUE) %>%
-      mutate_at(discrete_cols, first) %>%
+      mutate_at(discrete_cols, .funs = function(x) names(which.max(table(x)))) %>%
       distinct() %>%
       arrange(!!sym(group)) %>%
       as.data.frame()

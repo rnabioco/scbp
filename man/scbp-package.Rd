@@ -6,8 +6,7 @@
 \alias{scbp-package}
 \title{scbp: Boilerplate functions for single cell rna-seq analysis}
 \description{
-Lightweight wrappers to customize various plotting routines and
-    analysis methods.
+Lightweight wrappers to customize various plotting routines and analysis methods.
 }
 \author{
 \strong{Maintainer}: Kent Riemondy \email{kent.riemondy@ucdenver.edu} (\href{https://orcid.org/0000-0003-0750-1273}{ORCID})
