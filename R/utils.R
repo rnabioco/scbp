@@ -220,16 +220,20 @@ marker_type <- function(df){
                    "pct_in",
                    "pct_out")
 
-  scran_cols <- c("p.value", "FDR", "summary.logFC")
+  scran_findmarkers_cols <- c("p.value", "FDR", "summary.logFC")
+  scran_scoremarkers_cols <- c("self.average", "mean.logFC.cohen", "mean.AUC")
 
   if(all(colnames(df) %in% seurat_v3_cols) || all(colnames(df) %in% seurat_v4_cols)){
     marker_type <- "Seurat"
   } else if (all(colnames(df) %in% presto_cols)) {
     marker_type <- "presto"
-  } else if (all(scran_cols %in% colnames(df))) {
-    marker_type <- "scran"
+  } else if (all(scran_findmarkers_cols %in% colnames(df))) {
+    marker_type <- "scran_fm"
+  } else if (all(scran_scoremarkers_cols %in% colnames(df))) {
+    marker_type <- "scran_sm"
   } else {
-    stop("unknown marker file")
+    marker_type <- NULL
+    warning("unknown marker file")
   }
   marker_type
 }
@@ -252,11 +256,17 @@ write_markers_xlsx <- function(mrkr_list,
   } else if (mkr_type == "presto") {
     readme_sheet <- presto_marker_description(description_string)
     gene_col <- "feature"
-  } else if (mkr_type == "scran") {
+  } else if (mkr_type == "scran_fm") {
     readme_sheet <- scran_marker_description(description_string)
     gene_col <- "gene"
     mrkr_list <- map(mrkr_list, ~as.data.frame(.x) %>%
                      rownames_to_column("gene"))
+
+  } else if (mkr_type == "scran_sm") {
+    readme_sheet <- scran_marker_description(description_string)
+    gene_col <- "gene"
+    mrkr_list <- map(mrkr_list, ~as.data.frame(.x) %>%
+                       rownames_to_column("gene"))
 
   } else {
     stop("unknown marker gene list")
@@ -608,7 +618,11 @@ make_cellbrowser <- function(so,
   # see https://github.com/maximilianh/cellBrowser/blob/c643946d160c9729833a47d1bc44cd49fface6f6/src/cbPyLib/cellbrowser/cellbrowser.py#L2260
   if(!is.null(marker_file)){
     mkr_type <- marker_type(marker_file)
-    if(mkr_type == "Seurat"){
+    if(is.null(mkr_type)){
+      warning("unknown marker file, assuming formatted with cluster, gene, score as
+              first 3 columns")
+      mkrs <- read_tsv(marker_file)
+    } else if(mkr_type == "Seurat"){
       mkrs <- read_tsv(marker_file) %>%
         select(cluster, gene, fdr = p_val_adj, contains("avg_log"), everything(), -p_val)
     } else if (mkr_type == "presto") {
@@ -620,7 +634,7 @@ make_cellbrowser <- function(so,
                everything(),
                -pval,
                -statistic)
-    } else if (mkr_type == "scran") {
+    } else if (mkr_type == "scran_fm") {
       mkrs <- read_tsv(marker_file)
       if("cluster" %in% colnames(mkrs)){
         mkrs <- select(mkrs,
@@ -636,13 +650,19 @@ make_cellbrowser <- function(so,
                        fdr = FDR,
                        logFC = summary.logFC,
                        everything())
-      } else {
-        stop("cluster or group column not present")
       }
-
+    } else if (mkr_type == "scran_sm") {
+        mkrs <- read_tsv(marker_file)
+        mkrs <- select(mkrs,
+                       cluster,
+                       gene,
+                       mean.AUC = mean.AUC,
+                       mean.logFC.cohen = mean.logFC.cohen,
+                       everything())
     } else {
-      stop("unknown marker file")
+        stop("cluster or group column not present")
     }
+
 
     # sanitize cluster names
     mkrs <- mutate(mkrs, cluster = sanitize_names(cluster))
