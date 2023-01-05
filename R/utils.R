@@ -166,7 +166,7 @@ presto_marker_description <- function(description = ""){
 }
 
 #' @export
-scran_marker_description <- function(description = ""){
+scran_fm_marker_description <- function(description = ""){
   tibble(
     Columns = c(
       description,
@@ -284,7 +284,8 @@ marker_type <- function(df){
 #' @param mrkr_list list of marker data.frames from Seurat or presto
 #' @param path path to output xlsx
 #' @param description_string String to add to first excel sheet to describe data
-#' . Text is included with scbp::presto_marker_description or scbp::seurat_marker_description
+#' . Text is included with scbp::presto_marker_description, scbp::seurat_marker_description,
+#' scbp::scran_fm_marker_description (findMarkers), or scran_sm_marker_description (scoreMarkers).
 #' @param marker_type one of c("Seurat", "presto", "scran_fm", "scran_sm"), if NULL,
 #' will attempt to automatically identify
 #' @export
@@ -307,13 +308,13 @@ write_markers_xlsx <- function(mrkr_list,
     readme_sheet <- presto_marker_description(description_string)
     gene_col <- "feature"
   } else if (mkr_type == "scran_fm") {
-    readme_sheet <- scran_marker_description(description_string)
+    readme_sheet <- scran_fm_marker_description(description_string)
     gene_col <- "gene"
     mrkr_list <- map(mrkr_list, ~as.data.frame(.x) %>%
                      rownames_to_column("gene"))
 
   } else if (mkr_type == "scran_sm") {
-    readme_sheet <- scran_marker_description(description_string)
+    readme_sheet <- scran_sm_marker_description(description_string)
     gene_col <- "gene"
     mrkr_list <- map(mrkr_list, ~as.data.frame(.x) %>%
                        rownames_to_column("gene"))

@@ -18,7 +18,8 @@ write_markers_xlsx(
 \item{path}{path to output xlsx}
 
 \item{description_string}{String to add to first excel sheet to describe data
-. Text is included with scbp::presto_marker_description or scbp::seurat_marker_description}
+. Text is included with scbp::presto_marker_description, scbp::seurat_marker_description,
+scbp::scran_fm_marker_description (findMarkers), or scran_sm_marker_description (scoreMarkers).}
 
 \item{marker_type}{one of c("Seurat", "presto", "scran_fm", "scran_sm"), if NULL,
 will attempt to automatically identify}
