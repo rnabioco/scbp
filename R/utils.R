@@ -189,6 +189,48 @@ scran_marker_description <- function(description = ""){
     ))
 }
 
+#' @export
+scran_sm_marker_description <- function(description = ""){
+  data.frame(
+    Columns = c(
+      description,
+      "",
+      "Columns",
+      "self.average",
+      "other.average",
+      "self.detected",
+      "other.detected",
+      "",
+      "*.logFC.cohen",
+      "*.AUC",
+      "*.logFC.detected",
+      "",
+      "mean.*",
+      "median.*",
+      "min.*",
+      "max.*",
+      "rank.*"),
+    Description = c(
+      "",
+      "",
+      "",
+      "The average log-normalized abundance of a gene in the indicated cluster",
+      "The average log-normalized abundance of a gene in all other cells ",
+      "The proportion of cells in the indicated cluster expressing the gene ",
+      "The proportion of cells not in the cluster expressing the gene.",
+      "There are 3 statistics presented in the remaining columns. These statistics are then summarized using mean, median, min, max, or rank across all pair-wise comparisions.",
+      "The logFC.cohen columns contain the standardized log-fold change, i.e., Cohen's d. For each pairwise comparison, this is defined as the difference in the mean log-expression for each group scaled by the average standard deviation across the two groups. The standardized log-fold change helps to avoid spuriously large fold changes between groups with very high variance.",
+      "The AUC columns contain the area under the curve. This is the probability that a randomly chosen observation in one group is greater than a randomly chosen observation in the other group. If a cluster was classified using a single gene, the AUC would indicate the value of that classifer. Values greater than 0.5 indicate that a gene is upregulated in the first group. A value of 1 indicates that the gene is a perfect classifier for a cluster, a value of 0 indicates that absence of the gene is a perfect classifier for a gene.",
+      "The logFC in the detection rate between each pairwise comparision. This can be useful for identifying binary (on/off) expression patterns. However, scRNA-seq data often suffers from dropouts, which make RNAs appear not expressed when it is instead likely that these RNAs are present but too low to be detected.",
+      "For each of the metrics above, there are multiple methods to summarize these metrics across all of the pair-wise comparisions.",
+      "the mean effect size across all pairwise comparisons involving the indicated cluster. A large value (>0 for log-fold changes, >0.5 for the AUCs) indicates that the gene is upregulated in indicated cluster compared to the average of the other groups. A small value (<0 for the log-fold changes, <0.5 for the AUCs) indicates that the gene is downregulated in the indicated cluster instead.",
+      "the median effect size across all pairwise comparisons involving the indicated cluster. A large value indicates that the gene is upregulated in indicated cluster compared to most (>50 percent) other groups. A small value indicates that the gene is downregulated in indicated cluster instead.",
+      "the minimum effect size across all pairwise comparisons involving the indicated cluster. A large value indicates that the gene is upregulated in the indicated cluster compared to all other groups. A small value indicates that the gene is downregulated in the indicated cluster compared to at least one other group.",
+      "the maximum effect size across all pairwise comparisons involving the indicated cluster. A large value indicates that the gene is upregulated in the indicated cluster compared to at least one other group. A small value indicates that the gene is downregulated in the indicated cluster compared to all other groups.",
+      "the minimum rank (i.e., “min-rank”) across all pairwise comparisons involving the indicated cluster. A small min-rank indicates that the gene is one of the top upregulated genes in at least one comparison to another group."
+    ), row.names = NULL)
+}
+
 marker_type <- function(df){
   if(is.character(df)){
     df <- suppressMessages(read_tsv(df))
@@ -221,7 +263,7 @@ marker_type <- function(df){
                    "pct_out")
 
   scran_findmarkers_cols <- c("p.value", "FDR", "summary.logFC")
-  scran_scoremarkers_cols <- c("self.average", "mean.logFC.cohen", "mean.AUC")
+  scran_scoremarkers_cols <- c("mean.logFC.cohen", "mean.AUC")
 
   if(all(colnames(df) %in% seurat_v3_cols) || all(colnames(df) %in% seurat_v4_cols)){
     marker_type <- "Seurat"
@@ -243,12 +285,20 @@ marker_type <- function(df){
 #' @param path path to output xlsx
 #' @param description_string String to add to first excel sheet to describe data
 #' . Text is included with scbp::presto_marker_description or scbp::seurat_marker_description
+#' @param marker_type one of c("Seurat", "presto", "scran_fm", "scran_sm"), if NULL,
+#' will attempt to automatically identify
 #' @export
 write_markers_xlsx <- function(mrkr_list,
                                path,
-                               description_string = "Genes differentially expressed between each cluster and all other cells"){
+                               description_string = "Genes differentially expressed between each cluster and all other cells",
+                               marker_type = NULL){
 
-  mkr_type <- marker_type(mrkr_list[[1]])
+  if(is.null(marker_type)){
+    mkr_type <- marker_type(mrkr_list[[1]])
+  } else {
+    stopifnot(marker_type %in% c("Seurat", "presto", "scran_fm", "scran_sm"))
+    mkr_type <- marker_type
+  }
 
   if(mkr_type == "Seurat"){
     readme_sheet <- seurat_marker_description(description_string)

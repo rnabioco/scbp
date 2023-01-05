@@ -7,8 +7,9 @@
 write_markers_xlsx(
   mrkr_list,
   path,
- 
-    description_string = "Genes differentially expressed between each cluster and all other cells"
+  description_string =
+    "Genes differentially expressed between each cluster and all other cells",
+  marker_type = NULL
 )
 }
 \arguments{
@@ -18,6 +19,9 @@ write_markers_xlsx(
 
 \item{description_string}{String to add to first excel sheet to describe data
 . Text is included with scbp::presto_marker_description or scbp::seurat_marker_description}
+
+\item{marker_type}{one of c("Seurat", "presto", "scran_fm", "scran_sm"), if NULL,
+will attempt to automatically identify}
 }
 \description{
 Write marker table to excel for easier perusal by collaborators
