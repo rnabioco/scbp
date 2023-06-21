@@ -184,7 +184,7 @@ scran_fm_marker_description <- function(description = ""){
       "gene/feature name",
       "Pvalue, summarized from pairwise comparisions across all clusters",
       "adjusted pvalue",
-      "log2-fold-change,  summarized across all clusters",
+      "log2-fold-change, summarized across all clusters",
       "log2 fold change between current cluster, and indicated cluster "
     ))
 }
