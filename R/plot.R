@@ -785,7 +785,7 @@ plot_heatmap <- function(obj,
         t()
     }
     annot_df <- obj@meta.data[, annotations, drop = FALSE]
-    annot_df <- annot_df[order(annot_df[group]), , drop = FALSE]
+    annot_df <- annot_df[order(annot_df[[group]]), , drop = FALSE]
     mat <- mat[, rownames(annot_df)]
     show_cols <- FALSE
   }
